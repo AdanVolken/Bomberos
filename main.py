@@ -1,5 +1,6 @@
 import flet as ft
 import os
+import ventas 
 from collections import Counter
 from database import (
     init_database, 
@@ -102,7 +103,6 @@ def main(page: ft.Page):
         update_cart()
 
     def finalize_venta():
-        """Registra las ventas aumentando cantidad_vendida y limpia el carrito"""
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
@@ -111,31 +111,40 @@ def main(page: ft.Page):
             page.snack_bar.open = True
             page.update()
             return
-        
-        # Agrupar productos por ID para contar cantidad
+
+        # 1️⃣ Generar tickets (uno por producto)
+        empresa_info = empresa if empresa else {"nombre": "Mini POS"}
+        tickets = ventas.crear_tickets(cart, empresa_info)
+
+        # 2️⃣ Imprimir tickets (por ahora consola)
+        for ticket in tickets:
+            texto_ticket = ventas.generar_texto_ticket(ticket)
+            print("\n--- TICKET ---")
+            print(texto_ticket)
+            print("--------------\n")
+
+            # Más adelante:
+            # printer.print(texto_ticket)
+
+        # 3️⃣ Registrar ventas en DB (igual que antes)
         product_counts = Counter()
-        
         for item in cart:
-            product_id = item["id"]
-            product_counts[product_id] += 1
-        
-        # Actualizar cantidad_vendida para cada producto
-        productos_actualizados = 0
+            product_counts[item["id"]] += 1
+
         for product_id, cantidad in product_counts.items():
             registrar_venta(producto_id=product_id, cantidad=cantidad)
-            productos_actualizados += 1
-        
-        # Limpiar carrito
+
+        # 4️⃣ Limpiar carrito
         cart.clear()
         update_cart()
-        
-        # Mostrar mensaje de éxito
+
         page.snack_bar = ft.SnackBar(
-            content=ft.Text(f"Venta registrada: {productos_actualizados} producto(s) actualizado(s)"),
+            content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
             bgcolor=ft.Colors.GREEN
         )
         page.snack_bar.open = True
         page.update()
+
 
     # ------------------ PRODUCT CARD ------------------
 
