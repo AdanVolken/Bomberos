@@ -48,43 +48,16 @@ def get_empresa() -> Optional[Dict]:
     conn = get_connection()
     cursor = conn.cursor()
     
-    try:
-        # Verificar si la tabla existe y tiene la columna logo
-        cursor.execute("PRAGMA table_info(empresa)")
-        columnas = [col[1] for col in cursor.fetchall()]
-        
-        if not columnas:
-            # La tabla no existe
-            conn.close()
-            return None
-        
-        # Verificar si tiene la columna logo, si no, usar imagen
-        if 'logo' in columnas:
-            cursor.execute("SELECT nombre, logo FROM empresa LIMIT 1")
-        elif 'imagen' in columnas:
-            cursor.execute("SELECT nombre, imagen FROM empresa LIMIT 1")
-        else:
-            cursor.execute("SELECT nombre FROM empresa LIMIT 1")
-        
-        row = cursor.fetchone()
-        conn.close()
-        
-        if row:
-            if len(row) == 2:
-                return {
-                    "nombre": row[0],
-                    "logo": row[1] if row[1] else None
-                }
-            else:
-                return {
-                    "nombre": row[0],
-                    "logo": None
-                }
-        return None
-    except sqlite3.OperationalError as e:
-        # Si hay error, la tabla puede no existir o tener estructura diferente
-        conn.close()
-        return None
+    cursor.execute("SELECT nombre, logo FROM empresa LIMIT 1")
+    row = cursor.fetchone()
+    conn.close()
+    
+    if row:
+        return {
+            "nombre": row["nombre"],
+            "logo": row["logo"] if row["logo"] else None
+        }
+    return None
 
 def insert_empresa(nombre: str, logo: Optional[str] = None):
     """Inserta o actualiza la información de la empresa"""

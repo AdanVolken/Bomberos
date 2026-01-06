@@ -1,11 +1,14 @@
 import flet as ft
 import os
+import ventas
 from collections import Counter
 from database import (
-    init_database, 
-    get_all_products, 
-    get_empresa, 
-    registrar_venta
+    init_database,
+    get_all_products,
+    get_empresa,
+    registrar_venta,
+    insert_product,
+    get_ventas_summary
 )
 
 
@@ -14,55 +17,48 @@ def main(page: ft.Page):
     page.window_width = 1000
     page.window_height = 700
     page.padding = 20
-    page.bgcolor = ft.Colors.RED_700  # Fondo rojo
+    page.bgcolor = ft.Colors.GREY_900  # Gris oscuro
 
     # ------------------ INICIALIZAR BASE DE DATOS ------------------
-    
-    # Verificar si la base de datos existe, si no, inicializarla
+
     if not os.path.exists("Sistema_Tickets_DB.db"):
         init_database()
         page.snack_bar = ft.SnackBar(
-            content=ft.Text("Base de datos inicializada. Ejecuta init_db.py para cargar datos."),
+            content=ft.Text("Base de datos inicializada."),
             bgcolor=ft.Colors.ORANGE
         )
         page.snack_bar.open = True
 
-    # ------------------ CARGAR DATOS DESDE BASE DE DATOS ------------------
+    # ------------------ CARGAR DATOS ------------------
 
-    # Cargar información de la empresa
     empresa = get_empresa()
     if empresa:
         page.title = empresa.get("nombre", "Mini POS")
-        # El logo se puede usar después si lo necesitas
-    
-    # Cargar productos desde la base de datos
+
     products = get_all_products()
-    
+
     if not products:
-        # Si no hay productos, mostrar mensaje
         page.add(
             ft.Container(
+                expand=True,
                 content=ft.Column(
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     controls=[
                         ft.Text(
-                            "No hay productos en la base de datos.",
+                            "No hay productos cargados",
                             size=20,
-                            color=ft.Colors.WHITE,
-                            weight="bold"
+                            weight="bold",
+                            color=ft.Colors.WHITE
                         ),
                         ft.Text(
-                            "Ejecuta init_db.py para cargar productos de ejemplo.",
-                            size=16,
+                            "Agregá productos con el botón",
                             color=ft.Colors.WHITE70
-                        ),
+                        )
                     ]
-                ),
-                expand=True
+                )
             )
         )
-        return
 
     cart = []
 
@@ -76,20 +72,47 @@ def main(page: ft.Page):
         run_spacing=10,
     )
 
+    def refresh_products():
+        products_grid.controls.clear()
+        for product in get_all_products():
+            products_grid.controls.append(create_product_card(product))
+        page.update()
+
     # ------------------ VENTA ------------------
 
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
-    total_text = ft.Text("Total: $0", size=16, weight="bold", color=ft.Colors.WHITE)
+    total_text = ft.Text("Total: $0", size=20, weight="bold", color=ft.Colors.WHITE, text_align="center")
+
+    def remove_from_cart(index):
+        """Elimina un producto del carrito por su índice"""
+        if 0 <= index < len(cart):
+            cart.pop(index)
+            update_cart()
 
     def update_cart():
         cart_list.controls.clear()
         total = 0
 
-        for item in cart:
+        for i, item in enumerate(cart):
             cart_list.controls.append(
-                ft.Text(
-                    f"{item['name']} - ${int(item['price'])}",
-                    color=ft.Colors.WHITE
+                ft.Row(
+                    controls=[
+                        ft.Text(
+                            f"{item['name']} - ${int(item['price'])}",
+                            color=ft.Colors.WHITE,
+                            text_align="center",
+                            size=16,
+                            expand=True
+                        ),
+                        ft.TextButton(
+                            "Eliminar",
+                            on_click=lambda e, idx=i: remove_from_cart(idx),
+                            style=ft.ButtonStyle(
+                                color=ft.Colors.RED_700,
+                            ),
+                        ),
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 )
             )
             total += item["price"]
@@ -102,7 +125,6 @@ def main(page: ft.Page):
         update_cart()
 
     def finalize_venta():
-        """Registra las ventas aumentando cantidad_vendida y limpia el carrito"""
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
@@ -111,36 +133,82 @@ def main(page: ft.Page):
             page.snack_bar.open = True
             page.update()
             return
-        
-        # Agrupar productos por ID para contar cantidad
+
+        empresa_info = empresa if empresa else {"nombre": "Mini POS"}
+        tickets = ventas.crear_tickets(cart, empresa_info)
+
+        # Imprimir tickets (por ahora consola)
+        for ticket in tickets:
+            texto = ventas.generar_texto_ticket(ticket)
+            print("\n--- TICKET ---")
+            print(texto)
+            print("--------------\n")
+            # printer.print(texto)  ← futuro
+
+        # Registrar ventas en DB
         product_counts = Counter()
-        
         for item in cart:
-            product_id = item["id"]
-            product_counts[product_id] += 1
-        
-        # Actualizar cantidad_vendida para cada producto
-        productos_actualizados = 0
+            product_counts[item["id"]] += 1
+
         for product_id, cantidad in product_counts.items():
             registrar_venta(producto_id=product_id, cantidad=cantidad)
-            productos_actualizados += 1
-        
-        # Limpiar carrito
+
         cart.clear()
         update_cart()
-        
-        # Mostrar mensaje de éxito
+
         page.snack_bar = ft.SnackBar(
-            content=ft.Text(f"Venta registrada: {productos_actualizados} producto(s) actualizado(s)"),
+            content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
             bgcolor=ft.Colors.GREEN
         )
         page.snack_bar.open = True
         page.update()
 
+    # ------------------ POPUP AGREGAR PRODUCTO ------------------
+
+    nombre_input = ft.TextField(label="Nombre del producto")
+    precio_input = ft.TextField(label="Precio", keyboard_type=ft.KeyboardType.NUMBER)
+
+    def close_dialog(e=None):
+        dialog.open = False
+        page.update()
+
+    def save_product(e):
+        if not nombre_input.value or not precio_input.value:
+            return
+
+        insert_product(
+            nombre=nombre_input.value,
+            precio=float(precio_input.value),
+            imagen=None
+        )
+
+        nombre_input.value = ""
+        precio_input.value = ""
+        close_dialog()
+        refresh_products()
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Agregar producto"),
+        content=ft.Column(
+            tight=True,
+            controls=[nombre_input, precio_input]
+        ),
+        actions=[
+            ft.TextButton("Cancelar", on_click=close_dialog),
+            ft.ElevatedButton("Guardar", on_click=save_product),
+        ],
+    )
+
+    def open_add_product_dialog(e):
+        page.overlay.append(dialog)
+        dialog.open = True
+        page.update()
+
+
     # ------------------ PRODUCT CARD ------------------
 
     def create_product_card(product):
-        # Verificar si existe la imagen
         image_path = product.get("image")
         if image_path and os.path.exists(image_path):
             image_widget = ft.Image(
@@ -150,69 +218,177 @@ def main(page: ft.Page):
                 height=180,
             )
         else:
-            # Si no hay imagen, usar un color de fondo
             image_widget = ft.Container(
                 width=180,
                 height=180,
-                bgcolor=ft.Colors.WHITE_30,
+                bgcolor=ft.Colors.GREY_700,  # Gris medio
             )
-        
+
         return ft.Container(
             width=180,
             height=180,
+            border=ft.border.only(
+                top=ft.border.BorderSide(4, ft.Colors.RED_700)
+            ),
             border_radius=10,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
+            bgcolor=ft.Colors.GREY_800,  # Gris oscuro para la tarjeta
             on_click=lambda e: add_to_cart(product),
             content=ft.Stack(
                 controls=[
                     image_widget,
                     ft.Container(
+                        padding=10,
                         content=ft.Column(
                             alignment=ft.MainAxisAlignment.END,
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             spacing=5,
                             controls=[
                                 ft.Container(
+                                    padding=5,
+                                    bgcolor=ft.Colors.GREY_600,  # Gris medio-oscuro
+                                    border_radius=5,
+                                    width=170,
                                     content=ft.Text(
                                         product["name"],
                                         weight="bold",
-                                        size=14,
+                                        size=18,
                                         text_align="center",
                                         color=ft.Colors.WHITE,
                                     ),
-                                    bgcolor=ft.Colors.BLACK_54,
-                                    padding=5,
-                                    border_radius=5,
                                 ),
                                 ft.Container(
+                                    padding=5,
+                                    bgcolor=ft.Colors.GREY_500,  # Gris medio
+                                    border_radius=5,
+                                    width=170,
                                     content=ft.Text(
                                         f"${int(product['price'])}",
-                                        size=16,
+                                        size=20,
                                         weight="bold",
+                                        text_align="center",
                                         color=ft.Colors.WHITE,
                                     ),
-                                    bgcolor=ft.Colors.RED_700,
-                                    padding=5,
-                                    border_radius=5,
                                 ),
                             ],
                         ),
-                        padding=10,
                     ),
                 ],
             ),
         )
 
-    # Cargar productos desde la base de datos
-    for product in products:
-        products_grid.controls.append(create_product_card(product))
+    # Cargar productos iniciales
+    refresh_products()
 
     # ------------------ LAYOUT ------------------
+
+    # ------------------ REPORTE DE VENTAS ------------------
+    
+    def show_ventas_totales(e):
+        """Muestra el reporte de ventas totales"""
+        ventas = get_ventas_summary()
+        
+        # Crear contenido del reporte
+        reporte_items = []
+        total_general = 0
+        
+        for venta in ventas:
+            if venta["unidades_vendidas"] > 0:
+                total_producto = venta["ingresos_totales"]
+                total_general += total_producto
+                reporte_items.append(
+                    ft.Container(
+                        padding=10,
+                        bgcolor=ft.Colors.GREY_700,
+                        border_radius=5,
+                        margin=5,
+                        content=ft.Column(
+                            controls=[
+                                ft.Text(
+                                    venta["nombre"],
+                                    size=18,
+                                    weight="bold",
+                                    color=ft.Colors.WHITE
+                                ),
+                                ft.Text(
+                                    f"Unidades vendidas: {venta['unidades_vendidas']}",
+                                    size=16,
+                                    color=ft.Colors.WHITE70
+                                ),
+                                ft.Text(
+                                    f"Total: ${int(total_producto)}",
+                                    size=18,
+                                    weight="bold",
+                                    color=ft.Colors.WHITE
+                                ),
+                            ]
+                        )
+                    )
+                )
+        
+        if not reporte_items:
+            reporte_items.append(
+                ft.Text(
+                    "No hay ventas registradas",
+                    size=18,
+                    color=ft.Colors.WHITE70
+                )
+            )
+        else:
+            reporte_items.append(
+                ft.Divider(color=ft.Colors.GREY_600)
+            )
+            reporte_items.append(
+                ft.Container(
+                    padding=10,
+                    bgcolor=ft.Colors.GREY_600,
+                    border_radius=5,
+                    content=ft.Text(
+                        f"TOTAL GENERAL: ${int(total_general)}",
+                        size=22,
+                        weight="bold",
+                        color=ft.Colors.WHITE,
+                        text_align="center"
+                    )
+                )
+            )
+        
+        def close_ventas_dialog(e):
+            ventas_dialog.open = False
+            page.update()
+        
+        ventas_dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Ventas Totales", size=24, weight="bold"),
+            content=ft.Container(
+                width=500,
+                height=400,
+                content=ft.Column(
+                    scroll=ft.ScrollMode.AUTO,
+                    controls=reporte_items,
+                    spacing=5
+                )
+            ),
+            actions=[
+                ft.TextButton("Cerrar", on_click=close_ventas_dialog),
+            ],
+            bgcolor=ft.Colors.GREY_900,
+        )
+        
+        page.overlay.append(ventas_dialog)
+        ventas_dialog.open = True
+        page.update()
 
     left_panel = ft.Column(
         expand=True,
         controls=[
-            ft.Text("Productos", size=18, weight="bold", color=ft.Colors.WHITE),
+            ft.Text("Productos", size=24, weight="bold", color=ft.Colors.WHITE),
+            ft.ElevatedButton(
+                "+ Agregar producto",
+                on_click=open_add_product_dialog,
+                bgcolor=ft.Colors.GREY_700,  # Gris medio-oscuro
+                color=ft.Colors.WHITE,
+            ),
             products_grid,
         ],
     )
@@ -220,20 +396,23 @@ def main(page: ft.Page):
     right_panel = ft.Container(
         width=300,
         padding=10,
-        bgcolor=ft.Colors.BLACK_54,
+        bgcolor=ft.Colors.GREY_800,  # Gris oscuro
+        border=ft.border.only(
+            top=ft.border.BorderSide(4, ft.Colors.RED_700)
+        ),
         border_radius=10,
         content=ft.Column(
             expand=True,
             controls=[
-                ft.Text("Venta actual", size=18, weight="bold", color=ft.Colors.WHITE),
-                ft.Divider(color=ft.Colors.WHITE),
+                ft.Text("Venta actual", size=22, weight="bold", color=ft.Colors.WHITE),
+                ft.Divider(color=ft.Colors.GREY_600),  # Gris para el divisor
                 cart_list,
-                ft.Divider(color=ft.Colors.WHITE),
+                ft.Divider(color=ft.Colors.GREY_600),  # Gris para el divisor
                 total_text,
                 ft.ElevatedButton(
                     "Imprimir ticket",
                     on_click=lambda e: finalize_venta(),
-                    bgcolor=ft.Colors.RED_700,
+                    bgcolor=ft.Colors.GREY_600,  # Gris medio-oscuro
                     color=ft.Colors.WHITE,
                     width=280,
                 ),
@@ -241,10 +420,30 @@ def main(page: ft.Page):
         ),
     )
 
+    # Header con botón de Ventas Totales
+    header = ft.Row(
+        controls=[
+            ft.Container(expand=True),  # Espaciador
+            ft.ElevatedButton(
+                "Ventas Totales",
+                on_click=show_ventas_totales,
+                bgcolor=ft.Colors.GREY_700,
+                color=ft.Colors.WHITE,
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.END,
+    )
+
     page.add(
-        ft.Row(
+        ft.Column(
             expand=True,
-            controls=[left_panel, right_panel],
+            controls=[
+                header,
+                ft.Row(
+                    expand=True,
+                    controls=[left_panel, right_panel],
+                )
+            ]
         )
     )
 
