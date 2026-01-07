@@ -37,3 +37,5 @@ def generar_excel_ventas(ventas_summary):
     df.to_excel(nombre_archivo, index=False)
 
     return nombre_archivo
+
+# Ejemplo de uso
