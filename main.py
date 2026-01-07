@@ -2,6 +2,7 @@ import flet as ft
 import os
 import ventas
 from collections import Counter
+from generarExcel import generar_excel_ventas
 from database import (
     init_database,
     get_all_products,
@@ -101,14 +102,14 @@ def main(page: ft.Page):
                             f"{item['name']} - ${int(item['price'])}",
                             color=ft.Colors.WHITE,
                             text_align="center",
-                            size=16,
+                            size=20,
                             expand=True
                         ),
                         ft.TextButton(
                             "Eliminar",
                             on_click=lambda e, idx=i: remove_from_cart(idx),
                             style=ft.ButtonStyle(
-                                color=ft.Colors.RED_700,
+                                color=ft.Colors.RED_500,
                             ),
                         ),
                     ],
@@ -228,9 +229,11 @@ def main(page: ft.Page):
             width=180,
             height=180,
             border=ft.border.only(
-                top=ft.border.BorderSide(4, ft.Colors.RED_700)
+                top=ft.border.BorderSide(4,
+                                        ft.Colors.BLACK_38,
+                                        ft.BorderStyle.SOLID)
             ),
-            border_radius=10,
+            border_radius=15,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             bgcolor=ft.Colors.GREY_800,  # Gris oscuro para la tarjeta
             on_click=lambda e: add_to_cart(product),
@@ -246,13 +249,13 @@ def main(page: ft.Page):
                             controls=[
                                 ft.Container(
                                     padding=5,
-                                    bgcolor=ft.Colors.GREY_600,  # Gris medio-oscuro
+                                    # bgcolor=ft.Colors.GREY_600,  # Gris medio-oscuro
                                     border_radius=5,
                                     width=170,
                                     content=ft.Text(
                                         product["name"],
                                         weight="bold",
-                                        size=18,
+                                        size=25,
                                         text_align="center",
                                         color=ft.Colors.WHITE,
                                     ),
@@ -264,7 +267,7 @@ def main(page: ft.Page):
                                     width=170,
                                     content=ft.Text(
                                         f"${int(product['price'])}",
-                                        size=20,
+                                        size=25,
                                         weight="bold",
                                         text_align="center",
                                         color=ft.Colors.WHITE,
@@ -284,6 +287,18 @@ def main(page: ft.Page):
 
     # ------------------ REPORTE DE VENTAS ------------------
     
+    def exportar_excel_ventas():
+        ventas = get_ventas_summary()
+        archivo = generar_excel_ventas(ventas)
+
+        if archivo:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Excel generado: {archivo}"),
+                bgcolor=ft.Colors.GREEN
+            )
+            page.snack_bar.open = True
+            page.update()
+
     def show_ventas_totales(e):
         """Muestra el reporte de ventas totales"""
         ventas = get_ventas_summary()
@@ -299,6 +314,7 @@ def main(page: ft.Page):
                 reporte_items.append(
                     ft.Container(
                         padding=10,
+                        expand=True,
                         bgcolor=ft.Colors.GREY_700,
                         border_radius=5,
                         margin=5,
@@ -306,18 +322,18 @@ def main(page: ft.Page):
                             controls=[
                                 ft.Text(
                                     venta["nombre"],
-                                    size=18,
+                                    size=20,
                                     weight="bold",
                                     color=ft.Colors.WHITE
                                 ),
                                 ft.Text(
                                     f"Unidades vendidas: {venta['unidades_vendidas']}",
-                                    size=16,
+                                    size=20,
                                     color=ft.Colors.WHITE70
                                 ),
                                 ft.Text(
                                     f"Total: ${int(total_producto)}",
-                                    size=18,
+                                    size=20,
                                     weight="bold",
                                     color=ft.Colors.WHITE
                                 ),
@@ -370,8 +386,15 @@ def main(page: ft.Page):
                 )
             ),
             actions=[
+                ft.ElevatedButton(
+                    "Exportar Excel",
+                    on_click=lambda e: exportar_excel_ventas(),
+                    bgcolor=ft.Colors.GREY_600,
+                    color=ft.Colors.WHITE,
+                ),
                 ft.TextButton("Cerrar", on_click=close_ventas_dialog),
             ],
+
             bgcolor=ft.Colors.GREY_900,
         )
         
@@ -382,7 +405,7 @@ def main(page: ft.Page):
     left_panel = ft.Column(
         expand=True,
         controls=[
-            ft.Text("Productos", size=24, weight="bold", color=ft.Colors.WHITE),
+            ft.Text("Productos", size=44, weight="bold", color=ft.Colors.WHITE),
             ft.ElevatedButton(
                 "+ Agregar producto",
                 on_click=open_add_product_dialog,
@@ -394,11 +417,11 @@ def main(page: ft.Page):
     )
 
     right_panel = ft.Container(
-        width=300,
+        width=400,
         padding=10,
         bgcolor=ft.Colors.GREY_800,  # Gris oscuro
         border=ft.border.only(
-            top=ft.border.BorderSide(4, ft.Colors.RED_700)
+            top=ft.border.BorderSide(4, ft.Colors.BLACK_38)
         ),
         border_radius=10,
         content=ft.Column(
