@@ -1,6 +1,6 @@
 import sqlite3
 import os
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 
 DB_NAME = "Sistema_Tickets_DB.db"
@@ -86,15 +86,15 @@ def insert_empresa(nombre: str, logo: Optional[str] = None):
 
 # ==================== PRODUCTOS ====================
 
-def insert_product(nombre: str, precio: float, imagen: Optional[str] = None):
+def insert_product(nombre: str, precio: float, imagen: Optional[str] = None, cantidad_disponible: int = 0):
     """Inserta un nuevo producto en la base de datos"""
     conn = get_connection()
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO productos (nombre, precio, imagen, cantidad_vendida)
-        VALUES (?, ?, ?, 0)
-    """, (nombre, precio, imagen))
+        INSERT INTO productos (nombre, precio, imagen, cantidad_vendida, cantidad_disponible)
+        VALUES (?, ?, ?, 0, ?)
+    """, (nombre, precio, imagen, cantidad_disponible))
     
     conn.commit()
     product_id = cursor.lastrowid
@@ -107,7 +107,7 @@ def get_all_products() -> List[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, nombre, precio, imagen, cantidad_vendida
+        SELECT id, nombre, precio, imagen, cantidad_vendida, cantidad_disponible
         FROM productos
         ORDER BY nombre
     """)
@@ -117,12 +117,18 @@ def get_all_products() -> List[Dict]:
     
     products = []
     for row in rows:
+        cantidad_disponible = row["cantidad_disponible"] if row["cantidad_disponible"] is not None else 0
+        cantidad_vendida = row["cantidad_vendida"] if row["cantidad_vendida"] is not None else 0
+        cantidad_restante = cantidad_disponible - cantidad_vendida
+        
         products.append({
             "id": row["id"],
             "name": row["nombre"],
             "price": row["precio"],
             "image": row["imagen"] if row["imagen"] else None,
-            "cantidad_vendida": row["cantidad_vendida"]
+            "cantidad_vendida": cantidad_vendida,
+            "cantidad_disponible": cantidad_disponible,
+            "cantidad_restante": max(0, cantidad_restante)  # No permitir valores negativos
         })
     
     return products
@@ -133,7 +139,7 @@ def get_product_by_id(product_id: int) -> Optional[Dict]:
     cursor = conn.cursor()
     
     cursor.execute("""
-        SELECT id, nombre, precio, imagen, cantidad_vendida
+        SELECT id, nombre, precio, imagen, cantidad_vendida, cantidad_disponible
         FROM productos
         WHERE id = ?
     """, (product_id,))
@@ -142,16 +148,22 @@ def get_product_by_id(product_id: int) -> Optional[Dict]:
     conn.close()
     
     if row:
+        cantidad_disponible = row["cantidad_disponible"] if row["cantidad_disponible"] is not None else 0
+        cantidad_vendida = row["cantidad_vendida"] if row["cantidad_vendida"] is not None else 0
+        cantidad_restante = cantidad_disponible - cantidad_vendida
+        
         return {
             "id": row["id"],
             "name": row["nombre"],
             "price": row["precio"],
             "image": row["imagen"] if row["imagen"] else None,
-            "cantidad_vendida": row["cantidad_vendida"]
+            "cantidad_vendida": cantidad_vendida,
+            "cantidad_disponible": cantidad_disponible,
+            "cantidad_restante": max(0, cantidad_restante)  # No permitir valores negativos
         }
     return None
 
-def update_product(product_id: int, nombre: str = None, precio: float = None, imagen: str = None):
+def update_product(product_id: int, nombre: str = None, precio: float = None, imagen: str = None, cantidad_disponible: int = None):
     """Actualiza un producto"""
     conn = get_connection()
     cursor = conn.cursor()
@@ -168,6 +180,9 @@ def update_product(product_id: int, nombre: str = None, precio: float = None, im
     if imagen is not None:
         updates.append("imagen = ?")
         values.append(imagen)
+    if cantidad_disponible is not None:
+        updates.append("cantidad_disponible = ?")
+        values.append(cantidad_disponible)
     
     if updates:
         values.append(product_id)
@@ -186,19 +201,54 @@ def delete_product(product_id: int):
     conn.commit()
     conn.close()
 
-def registrar_venta(producto_id: int, cantidad: int):
-    """Registra una venta aumentando cantidad_vendida del producto"""
+def registrar_venta(producto_id: int, cantidad: int) -> Tuple[bool, str]:
+    """
+    Registra una venta aumentando cantidad_vendida del producto.
+    Valida que no se exceda la cantidad disponible.
+    
+    Returns:
+        (success: bool, message: str)
+    """
     conn = get_connection()
     cursor = conn.cursor()
     
-    cursor.execute("""
-        UPDATE productos 
-        SET cantidad_vendida = cantidad_vendida + ?
-        WHERE id = ?
-    """, (cantidad, producto_id))
-    
-    conn.commit()
-    conn.close()
+    try:
+        # Obtener información del producto
+        cursor.execute("""
+            SELECT cantidad_vendida, cantidad_disponible
+            FROM productos
+            WHERE id = ?
+        """, (producto_id,))
+        
+        row = cursor.fetchone()
+        if not row:
+            return False, "Producto no encontrado"
+        
+        cantidad_vendida_actual = row["cantidad_vendida"] or 0
+        cantidad_disponible = row["cantidad_disponible"] or 0
+        
+        # Calcular cantidad restante
+        cantidad_restante = cantidad_disponible - cantidad_vendida_actual
+        
+        # Validar que haya suficiente cantidad disponible
+        if cantidad > cantidad_restante:
+            return False, f"No hay suficiente cantidad disponible. Disponible: {cantidad_restante}, Solicitado: {cantidad}"
+        
+        # Registrar la venta
+        cursor.execute("""
+            UPDATE productos 
+            SET cantidad_vendida = cantidad_vendida + ?
+            WHERE id = ?
+        """, (cantidad, producto_id))
+        
+        conn.commit()
+        return True, "Venta registrada correctamente"
+        
+    except Exception as e:
+        conn.rollback()
+        return False, f"Error al registrar venta: {str(e)}"
+    finally:
+        conn.close()
 
 # ==================== VENTAS ====================
 
@@ -213,6 +263,7 @@ def get_ventas_summary() -> List[Dict]:
             nombre,
             precio,
             cantidad_vendida,
+            cantidad_disponible,
             (precio * cantidad_vendida) as ingresos_totales
         FROM productos
         ORDER BY cantidad_vendida DESC
@@ -223,11 +274,17 @@ def get_ventas_summary() -> List[Dict]:
     
     summary = []
     for row in rows:
+        cantidad_vendida = row["cantidad_vendida"] or 0
+        cantidad_disponible = row["cantidad_disponible"] or 0
+        cantidad_restante = max(0, cantidad_disponible - cantidad_vendida)
+        
         summary.append({
             "producto_id": row["id"],
             "nombre": row["nombre"],
             "precio": row["precio"],
-            "unidades_vendidas": row["cantidad_vendida"] or 0,
+            "unidades_vendidas": cantidad_vendida,
+            "cantidad_disponible": cantidad_disponible,
+            "cantidad_restante": cantidad_restante,
             "ingresos_totales": row["ingresos_totales"] or 0.0
         })
     
