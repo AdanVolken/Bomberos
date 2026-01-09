@@ -139,7 +139,7 @@ def main(page: ft.Page):
             page.snack_bar.open = True
             return
 
-        empresa_info = empresa if empresa else {"nombre": "Mini POS"}
+        empresa_info = empresa if empresa else {"nombre": " Bomberos"}
         tickets = ventas.crear_tickets(cart, empresa_info)
 
         product_counts = Counter()
@@ -308,25 +308,41 @@ def main(page: ft.Page):
     )
 
     right_panel = ft.Container(
-        width=380,
+        width=350,
         padding=10,
         bgcolor=ft.Colors.GREY_800,
         border_radius=10,
         content=ft.Column(
             expand=True,
             controls=[
-                ft.Text("Venta actual", size=22, weight="bold", color=ft.Colors.WHITE),
-                cart_list,
+                # TÍTULO
+                ft.Text(
+                    "Venta actual",
+                    size=22,
+                    weight="bold",
+                    color=ft.Colors.WHITE
+                ),
+
+                # LISTA DE PRODUCTOS (SCROLL)
+                ft.Container(
+                    expand=True,   # 👈 ocupa todo el espacio disponible
+                    content=cart_list
+                ),
+
+                # TOTAL (FIJO)
                 total_text,
+
+                # BOTÓN FIJO ABAJO
                 ft.ElevatedButton(
                     "Imprimir ticket",
                     on_click=lambda e: finalize_venta(),
                     bgcolor=ft.Colors.GREY_600,
                     color=ft.Colors.WHITE,
                 ),
-            ],
+            ]
         ),
     )
+
 
     page.add(
         ft.Row(
