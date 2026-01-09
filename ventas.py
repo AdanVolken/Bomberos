@@ -31,10 +31,7 @@ def generar_texto_ticket(ticket):
     lineas = [
         ticket["empresa"],
         "-" * 24,
-        ticket["producto"],
-        f"${int(ticket['precio'])}",
-        "-" * 24,
-        ticket["fecha"]
+        ticket["producto"]
     ]
 
     return "\n".join(lineas)

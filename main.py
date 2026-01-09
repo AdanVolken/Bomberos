@@ -67,10 +67,9 @@ def main(page: ft.Page):
 
     products_grid = ft.GridView(
         expand=True,
-        runs_count=4,
-        max_extent=180,
-        spacing=10,
-        run_spacing=10,
+        runs_count=4,      # ← 4 columnas fijas
+        spacing=20,
+        run_spacing=20,
     )
 
     def refresh_products():
@@ -222,63 +221,67 @@ def main(page: ft.Page):
             image_widget = ft.Container(
                 width=180,
                 height=180,
-                bgcolor=ft.Colors.GREY_700,  # Gris medio
+                # bgcolor=ft.Colors.GREY_700,  # Gris medio
             )
 
         return ft.Container(
             width=180,
             height=180,
             border=ft.border.only(
-                top=ft.border.BorderSide(4,
-                                        ft.Colors.BLACK_38,
-                                        ft.BorderStyle.SOLID)
+                top=ft.border.BorderSide(
+                    4,
+                    ft.Colors.BLACK_38,
+                    ft.BorderStyle.SOLID
+                )
             ),
             border_radius=15,
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
-            bgcolor=ft.Colors.GREY_800,  # Gris oscuro para la tarjeta
+            bgcolor=ft.Colors.GREY_800,
             on_click=lambda e: add_to_cart(product),
             content=ft.Stack(
                 controls=[
+                    # Fondo / imagen
                     image_widget,
+
+                    # Nombre centrado
                     ft.Container(
+                        expand=True,
+                        alignment=ft.Alignment(0, 0),  # ← CENTRO REAL
                         padding=10,
-                        content=ft.Column(
-                            alignment=ft.MainAxisAlignment.END,
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                            spacing=5,
-                            controls=[
-                                ft.Container(
-                                    padding=5,
-                                    # bgcolor=ft.Colors.GREY_600,  # Gris medio-oscuro
-                                    border_radius=5,
-                                    width=170,
-                                    content=ft.Text(
-                                        product["name"],
-                                        weight="bold",
-                                        size=25,
-                                        text_align="center",
-                                        color=ft.Colors.WHITE,
-                                    ),
-                                ),
-                                ft.Container(
-                                    padding=5,
-                                    bgcolor=ft.Colors.GREY_500,  # Gris medio
-                                    border_radius=5,
-                                    width=170,
-                                    content=ft.Text(
-                                        f"${int(product['price'])}",
-                                        size=25,
-                                        weight="bold",
-                                        text_align="center",
-                                        color=ft.Colors.WHITE,
-                                    ),
-                                ),
-                            ],
+                        content=ft.Text(
+                            product["name"],
+                            size=26,
+                            weight="bold",
+                            color=ft.Colors.WHITE,
+                            text_align="center",
+                            max_lines=2,
+                            overflow=ft.TextOverflow.ELLIPSIS,
+                        ),
+                    ),
+
+                    # Precio abajo
+                    ft.Container(
+                        alignment=ft.Alignment(0, 1),  # ← ABAJO CENTRADO
+                        padding=12,
+                        content=ft.Container(
+                            padding=6,
+                            width=150,
+                            bgcolor=ft.Colors.GREY_500,
+                            border_radius=8,
+                            content=ft.Text(
+                                f"${int(product['price'])}",
+                                size=22,
+                                weight="bold",
+                                color=ft.Colors.WHITE,
+                                text_align="center",
+                            ),
                         ),
                     ),
                 ],
             ),
+
         )
+
 
     # Cargar productos iniciales
     refresh_products()
