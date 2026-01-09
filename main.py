@@ -18,7 +18,7 @@ def main(page: ft.Page):
     page.window_width = 1000
     page.window_height = 700
     page.padding = 20
-    page.bgcolor = ft.colors.GREY_900
+    page.bgcolor = ft.Colors.GREY_900
 
     # ------------------ DB INIT ------------------
 
@@ -26,7 +26,7 @@ def main(page: ft.Page):
         init_database()
         page.snack_bar = ft.SnackBar(
             content=ft.Text("Base de datos inicializada."),
-            bgcolor=ft.colors.ORANGE
+            bgcolor=ft.Colors.ORANGE
         )
         page.snack_bar.open = True
 
@@ -59,7 +59,7 @@ def main(page: ft.Page):
         if not ventas_summary:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("No hay ventas para exportar"),
-                bgcolor=ft.colors.RED
+                bgcolor=ft.Colors.RED
             )
             page.snack_bar.open = True
             page.update()
@@ -70,7 +70,7 @@ def main(page: ft.Page):
         if archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Excel generado: {archivo}"),
-                bgcolor=ft.colors.GREEN
+                bgcolor=ft.Colors.GREEN
             )
             page.snack_bar.open = True
             page.update()
@@ -85,7 +85,7 @@ def main(page: ft.Page):
     # ------------------ CART ------------------
 
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
-    total_text = ft.Text("Total: $0", size=20, weight="bold", color=ft.colors.WHITE)
+    total_text = ft.Text("Total: $0", size=20, weight="bold", color=ft.Colors.WHITE)
 
     def remove_from_cart(index):
         if 0 <= index < len(cart):
@@ -102,14 +102,19 @@ def main(page: ft.Page):
                     controls=[
                         ft.Text(
                             f"{item['name']} - ${int(item['price'])}",
-                            color=ft.colors.WHITE,
+                            color=ft.Colors.WHITE,
                             size=18,
                             expand=True,
                         ),
-                        ft.TextButton(
-                            "Eliminar",
+                        ft.Container(
+                            content=ft.Text(
+                                "Eliminar",
+                                color=ft.Colors.RED_500,
+                                size=16,
+                            ),
                             on_click=lambda e, idx=i: remove_from_cart(idx),
-                            style=ft.ButtonStyle(color=ft.colors.RED_500),
+                            padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                            ink=True,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -128,7 +133,7 @@ def main(page: ft.Page):
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
-                bgcolor=ft.colors.RED
+                bgcolor=ft.Colors.RED
             )
             page.snack_bar.open = True
             return
@@ -146,7 +151,7 @@ def main(page: ft.Page):
             if not ok:
                 page.snack_bar = ft.SnackBar(
                     content=ft.Text(msg),
-                    bgcolor=ft.colors.RED
+                    bgcolor=ft.Colors.RED
                 )
                 page.snack_bar.open = True
                 page.update()
@@ -159,7 +164,7 @@ def main(page: ft.Page):
 
         page.snack_bar = ft.SnackBar(
             content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
-            bgcolor=ft.colors.GREEN
+            bgcolor=ft.Colors.GREEN
         )
         page.snack_bar.open = True
 
@@ -219,7 +224,7 @@ def main(page: ft.Page):
             width=180,
             height=180,
             border_radius=15,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             on_click=lambda e: add_to_cart(product),
             content=ft.Stack(
                 controls=[
@@ -236,7 +241,7 @@ def main(page: ft.Page):
                                     product["name"],
                                     size=30,
                                     weight="bold",
-                                    color=ft.colors.WHITE,
+                                    color=ft.Colors.WHITE,
                                     text_align="center",
                                     max_lines=2,
                                     overflow=ft.TextOverflow.ELLIPSIS,
@@ -245,9 +250,9 @@ def main(page: ft.Page):
                                     f"Stock: {product['cantidad_disponible']}",
                                     size=16,
                                     color=(
-                                        ft.colors.RED_400
+                                        ft.Colors.RED_400
                                         if product["cantidad_disponible"] <= 5
-                                        else ft.colors.WHITE70
+                                        else ft.Colors.WHITE70
                                     ),
                                 ),
                             ],
@@ -261,13 +266,13 @@ def main(page: ft.Page):
                         content=ft.Container(
                             padding=6,
                             width=140,
-                            bgcolor=ft.colors.GREY_500,
+                            bgcolor=ft.Colors.GREY_500,
                             border_radius=8,
                             content=ft.Text(
                                 f"${int(product['price'])}",
                                 size=20,
                                 weight="bold",
-                                color=ft.colors.WHITE,
+                                color=ft.Colors.WHITE,
                                 text_align="center",
                             ),
                         ),
@@ -284,18 +289,18 @@ def main(page: ft.Page):
     left_panel = ft.Column(
         expand=True,
         controls=[
-            ft.Text("Productos", size=40, weight="bold", color=ft.colors.WHITE),
+            ft.Text("Productos", size=40, weight="bold", color=ft.Colors.WHITE),
             ft.ElevatedButton(
                 "+ Agregar producto",
                 on_click=open_add_product_dialog,
-                bgcolor=ft.colors.GREY_700,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.GREY_700,
+                color=ft.Colors.WHITE,
             ),
             ft.ElevatedButton(
             "Descargar Excel de ventas",
             on_click=descargar_excel_ventas,
-            bgcolor=ft.colors.GREEN_700,
-            color=ft.colors.WHITE,
+            bgcolor=ft.Colors.GREEN_700,
+            color=ft.Colors.WHITE,
         ),
             products_grid,
         ],
@@ -304,19 +309,19 @@ def main(page: ft.Page):
     right_panel = ft.Container(
         width=380,
         padding=10,
-        bgcolor=ft.colors.GREY_800,
+        bgcolor=ft.Colors.GREY_800,
         border_radius=10,
         content=ft.Column(
             expand=True,
             controls=[
-                ft.Text("Venta actual", size=22, weight="bold", color=ft.colors.WHITE),
+                ft.Text("Venta actual", size=22, weight="bold", color=ft.Colors.WHITE),
                 cart_list,
                 total_text,
                 ft.ElevatedButton(
                     "Imprimir ticket",
                     on_click=lambda e: finalize_venta(),
-                    bgcolor=ft.colors.GREY_600,
-                    color=ft.colors.WHITE,
+                    bgcolor=ft.Colors.GREY_600,
+                    color=ft.Colors.WHITE,
                 ),
             ],
         ),
