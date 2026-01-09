@@ -1,5 +1,6 @@
 import flet as ft
 import os
+from printer import imprimir_ticket
 import ventas
 from collections import Counter
 from generarExcel import generar_excel_ventas
@@ -145,17 +146,17 @@ def main(page: ft.Page):
         for item in cart:
             product_counts[item["id"]] += 1
 
-        for product_id, cantidad in product_counts.items():
-            ok, msg = registrar_venta(producto_id=product_id, cantidad=cantidad)
+        texto_ticket = ventas.generar_texto_ticket(cart, total_text.value)
 
-            if not ok:
-                page.snack_bar = ft.SnackBar(
-                    content=ft.Text(msg),
-                    bgcolor=ft.Colors.RED
-                )
-                page.snack_bar.open = True
-                page.update()
-                return
+        ok_print, msg_print = imprimir_ticket(texto_ticket)
+
+        if not ok_print:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(msg_print),
+                bgcolor=ft.Colors.RED
+            )
+            page.snack_bar.open = True
+            return
 
 
         cart.clear()
