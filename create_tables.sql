@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS productos (
     nombre TEXT NOT NULL,
     precio REAL NOT NULL,
     imagen TEXT,
-    cantidad_vendida INTEGER DEFAULT 0
+    cantidad_vendida INTEGER DEFAULT 0,
+    cantidad_disponible INTEGER DEFAULT 0
 );
 
