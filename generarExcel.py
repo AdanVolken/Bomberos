@@ -22,6 +22,7 @@ def generar_excel_ventas(ventas_summary):
             filas.append({
                 "Producto": venta["nombre"],
                 "Unidades vendidas": venta["unidades_vendidas"],
+                "Stock": venta["stock_actual"],
                 "Total ($)": int(total)
             })
 
@@ -33,7 +34,7 @@ def generar_excel_ventas(ventas_summary):
 
     df = pd.DataFrame(filas)
 
-    nombre_archivo = f"ventas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    nombre_archivo = f"Ventas_Bomberos.xlsx"
     df.to_excel(nombre_archivo, index=False)
 
     return nombre_archivo

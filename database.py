@@ -86,20 +86,20 @@ def insert_empresa(nombre: str, logo: Optional[str] = None):
 
 # ==================== PRODUCTOS ====================
 
-def descontar_stock(producto_id, cantidad):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+# def descontar_stock(producto_id, cantidad):
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
 
-    cursor.execute("""
-        UPDATE productos
-        SET 
-            cantidad_vendida = cantidad_vendida + ?,
-            cantidad_disponible = cantidad_disponible - ?
-        WHERE id = ? AND cantidad_disponible >= ?
-    """, (cantidad, cantidad, producto_id, cantidad))
+#     cursor.execute("""
+#         UPDATE productos
+#         SET 
+#             cantidad_vendida = cantidad_vendida + ?,
+#             cantidad_disponible = cantidad_disponible - ?
+#         WHERE id = ? AND cantidad_disponible >= ?
+#     """, (cantidad, cantidad, producto_id, cantidad))
 
-    conn.commit()
-    conn.close()
+#     conn.commit()
+#     conn.close()
 
 
 def insert_product(nombre: str, precio: float, imagen: Optional[str] = None, cantidad_disponible: int = 0):
@@ -294,10 +294,10 @@ def get_ventas_summary() -> List[Dict]:
             "nombre": row["nombre"],
             "precio": row["precio"],
             "unidades_vendidas": cantidad_vendida,
-            "cantidad_disponible": cantidad_disponible,
-            "cantidad_restante": cantidad_restante,
+            "stock_actual": cantidad_disponible,  # 👈 YA ES EL STOCK REAL
             "ingresos_totales": row["ingresos_totales"] or 0.0
         })
+
     
     return summary
 
