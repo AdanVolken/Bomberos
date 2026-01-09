@@ -43,3 +43,4 @@ Thumbs.db
 # ======================
 # Logs
 # =
+git rm --cached -r __pycache__/

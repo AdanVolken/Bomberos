@@ -115,18 +115,10 @@ def main(page: ft.Page):
     grid_height = (3 * max_extent) + (2 * grid_run_spacing)
     
     products_grid = ft.GridView(
-<<<<<<< HEAD
         expand=True,
         runs_count=4,      # ← 4 columnas fijas
         spacing=20,
         run_spacing=20,
-=======
-        runs_count=4,  # FORZAR exactamente 4 columnas
-        max_extent=max_extent,  # Tamaño máximo de cada celda
-        spacing=grid_spacing,
-        run_spacing=grid_run_spacing,
-        height=grid_height,  # Altura fija para mostrar exactamente 3 filas completas
->>>>>>> 46f32e90f2449e0334f3205c8d4b5d7f54b651e2
     )
 
     def refresh_products():
@@ -326,14 +318,9 @@ def main(page: ft.Page):
             )
         else:
             image_widget = ft.Container(
-<<<<<<< HEAD
                 width=180,
                 height=180,
                 # bgcolor=ft.Colors.GREY_700,  # Gris medio
-=======
-                expand=True,
-                bgcolor=ft.Colors.GREY_700,  # Gris medio
->>>>>>> 46f32e90f2449e0334f3205c8d4b5d7f54b651e2
             )
 
         cantidad_restante = product.get("cantidad_restante", 0)
@@ -346,7 +333,6 @@ def main(page: ft.Page):
 
         return ft.Container(
             border=ft.border.only(
-<<<<<<< HEAD
                 top=ft.border.BorderSide(
                     4,
                     ft.Colors.BLACK_38,
@@ -357,15 +343,6 @@ def main(page: ft.Page):
             clip_behavior=ft.ClipBehavior.HARD_EDGE,
             bgcolor=ft.Colors.GREY_800,
             on_click=lambda e: add_to_cart(product),
-=======
-                top=ft.border.BorderSide(4, border_color, ft.BorderStyle.SOLID)
-            ),
-            border_radius=15,
-            clip_behavior=ft.ClipBehavior.HARD_EDGE,
-            bgcolor=ft.Colors.GREY_800,  # Gris oscuro para la tarjeta
-            opacity=opacity,
-            on_click=on_click_handler,
->>>>>>> 46f32e90f2449e0334f3205c8d4b5d7f54b651e2
             content=ft.Stack(
                 expand=True,
                 controls=[
@@ -377,7 +354,6 @@ def main(page: ft.Page):
                         expand=True,
                         alignment=ft.Alignment(0, 0),  # ← CENTRO REAL
                         padding=10,
-<<<<<<< HEAD
                         content=ft.Text(
                             product["name"],
                             size=26,
@@ -405,50 +381,6 @@ def main(page: ft.Page):
                                 color=ft.Colors.WHITE,
                                 text_align="center",
                             ),
-=======
-                        expand=True,
-                        content=ft.Column(
-                            alignment=ft.MainAxisAlignment.END,
-                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                            spacing=5,
-                            controls=[
-                                ft.Container(
-                                    padding=5,
-                                    border_radius=5,
-                                    content=ft.Text(
-                                        product["name"],
-                                        weight="bold",
-                                        size=18,
-                                        text_align="center",
-                                        color=ft.Colors.WHITE,
-                                    ),
-                                ),
-                                ft.Container(
-                                    padding=5,
-                                    bgcolor=ft.Colors.GREY_500,  # Gris medio
-                                    border_radius=5,
-                                    content=ft.Text(
-                                        f"${int(product['price'])}",
-                                        size=18,
-                                        weight="bold",
-                                        text_align="center",
-                                        color=ft.Colors.WHITE,
-                                    ),
-                                ),
-                                ft.Container(
-                                    padding=3,
-                                    bgcolor=ft.Colors.GREY_600,
-                                    border_radius=3,
-                                    content=ft.Text(
-                                        f"Disponible: {cantidad_restante}" if cantidad_restante > 0 else "Agotado",
-                                        size=11,
-                                        text_align="center",
-                                        color=ft.Colors.WHITE if cantidad_restante > 0 else ft.Colors.RED_300,
-                                        weight="bold" if cantidad_restante <= 0 else None,
-                                    ),
-                                ),
-                            ],
->>>>>>> 46f32e90f2449e0334f3205c8d4b5d7f54b651e2
                         ),
                     ),
                 ],
