@@ -86,6 +86,22 @@ def insert_empresa(nombre: str, logo: Optional[str] = None):
 
 # ==================== PRODUCTOS ====================
 
+def descontar_stock(producto_id, cantidad):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE productos
+        SET 
+            cantidad_vendida = cantidad_vendida + ?,
+            cantidad_disponible = cantidad_disponible - ?
+        WHERE id = ? AND cantidad_disponible >= ?
+    """, (cantidad, cantidad, producto_id, cantidad))
+
+    conn.commit()
+    conn.close()
+
+
 def insert_product(nombre: str, precio: float, imagen: Optional[str] = None, cantidad_disponible: int = 0):
     """Inserta un nuevo producto en la base de datos"""
     conn = get_connection()
@@ -203,52 +219,47 @@ def delete_product(product_id: int):
 
 def registrar_venta(producto_id: int, cantidad: int) -> Tuple[bool, str]:
     """
-    Registra una venta aumentando cantidad_vendida del producto.
-    Valida que no se exceda la cantidad disponible.
-    
-    Returns:
-        (success: bool, message: str)
+    Registra una venta:
+    - Valida stock
+    - Suma cantidad_vendida
+    - Resta cantidad_disponible
     """
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
-        # Obtener información del producto
         cursor.execute("""
-            SELECT cantidad_vendida, cantidad_disponible
+            SELECT cantidad_disponible
             FROM productos
             WHERE id = ?
         """, (producto_id,))
-        
+
         row = cursor.fetchone()
         if not row:
             return False, "Producto no encontrado"
-        
-        cantidad_vendida_actual = row["cantidad_vendida"] or 0
-        cantidad_disponible = row["cantidad_disponible"] or 0
-        
-        # Calcular cantidad restante
-        cantidad_restante = cantidad_disponible - cantidad_vendida_actual
-        
-        # Validar que haya suficiente cantidad disponible
-        if cantidad > cantidad_restante:
-            return False, f"No hay suficiente cantidad disponible. Disponible: {cantidad_restante}, Solicitado: {cantidad}"
-        
-        # Registrar la venta
+
+        stock_actual = row["cantidad_disponible"] or 0
+
+        if cantidad > stock_actual:
+            return False, f"Stock insuficiente. Disponible: {stock_actual}"
+
         cursor.execute("""
-            UPDATE productos 
-            SET cantidad_vendida = cantidad_vendida + ?
+            UPDATE productos
+            SET
+                cantidad_vendida = cantidad_vendida + ?,
+                cantidad_disponible = cantidad_disponible - ?
             WHERE id = ?
-        """, (cantidad, producto_id))
-        
+        """, (cantidad, cantidad, producto_id))
+
         conn.commit()
-        return True, "Venta registrada correctamente"
-        
+        return True, "Venta registrada y stock actualizado"
+
     except Exception as e:
         conn.rollback()
-        return False, f"Error al registrar venta: {str(e)}"
+        return False, f"Error al registrar venta: {e}"
     finally:
         conn.close()
+
 
 # ==================== VENTAS ====================
 
