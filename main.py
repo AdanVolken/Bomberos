@@ -137,37 +137,80 @@ def main(page: ft.Page):
                 bgcolor=ft.Colors.RED
             )
             page.snack_bar.open = True
+            page.update()
             return
 
-        empresa_info = empresa if empresa else {"nombre": " Bomberos"}
-        tickets = ventas.crear_tickets(cart, empresa_info)
-
-        product_counts = Counter()
+        # --- NUEVA LÓGICA: Un ticket por producto ---
+        errores = 0
+        
         for item in cart:
-            product_counts[item["id"]] += 1
+            # Aquí personalizamos el texto para cada ticket individual
+            # Usamos item["name"] para que aparezca el nombre del producto
+            texto_ticket = ventas.generar_texto_ticket("Bomberos", f"{item['name']}")
+            
+            ok_print, msg_print = imprimir_ticket(texto_ticket)
+            
+            if not ok_print:
+                errores += 1
 
-        texto_ticket = ventas.generar_texto_ticket("Bomberos", "Vino de productos vendidos:")
-
-        ok_print, msg_print = imprimir_ticket(texto_ticket)
-
-        if not ok_print:
+        if errores > 0:
             page.snack_bar = ft.SnackBar(
-                content=ft.Text(msg_print),
+                content=ft.Text(f"Error en {errores} ticket(s)"),
                 bgcolor=ft.Colors.RED
             )
-            page.snack_bar.open = True
-            return
+        else:
+            # Si todo salió bien, registramos la venta en DB y limpiamos
+            # (Opcional: puedes registrar la venta antes del loop)
+            cart.clear()
+            update_cart()
+            refresh_products() 
 
-
-        cart.clear()
-        update_cart()
-        refresh_products() 
-
-        page.snack_bar = ft.SnackBar(
-            content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
-            bgcolor=ft.Colors.GREEN
-        )
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Todos los tickets impresos y cortados"),
+                bgcolor=ft.Colors.GREEN
+            )
+        
         page.snack_bar.open = True
+        page.update()
+
+    # def finalize_venta():
+    #     if not cart:
+    #         page.snack_bar = ft.SnackBar(
+    #             content=ft.Text("El carrito está vacío"),
+    #             bgcolor=ft.Colors.RED
+    #         )
+    #         page.snack_bar.open = True
+    #         return
+
+    #     empresa_info = empresa if empresa else {"nombre": " Bomberos"}
+    #     tickets = ventas.crear_tickets(cart, empresa_info)
+
+    #     product_counts = Counter()
+    #     for item in cart:
+    #         product_counts[item["id"]] += 1
+
+    #     texto_ticket = ventas.generar_texto_ticket("Bomberos", total_text.value)
+
+    #     ok_print, msg_print = imprimir_ticket(texto_ticket)
+
+    #     if not ok_print:
+    #         page.snack_bar = ft.SnackBar(
+    #             content=ft.Text(msg_print),
+    #             bgcolor=ft.Colors.RED
+    #         )
+    #         page.snack_bar.open = True
+    #         return
+
+
+    #     cart.clear()
+    #     update_cart()
+    #     refresh_products() 
+
+    #     page.snack_bar = ft.SnackBar(
+    #         content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
+    #         bgcolor=ft.Colors.GREEN
+    #     )
+    #     page.snack_bar.open = True
 
     # ------------------ ADD PRODUCT ------------------
 
@@ -325,7 +368,7 @@ def main(page: ft.Page):
 
                 # LISTA DE PRODUCTOS (SCROLL)
                 ft.Container(
-                    expand=True,   # 👈 ocupa todo el espacio disponible
+                    expand=True,   #  ocupa todo el espacio disponible
                     content=cart_list
                 ),
 
