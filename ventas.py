@@ -23,15 +23,11 @@ def crear_tickets(productos, empresa):
     return tickets
 
 
-def generar_texto_ticket(ticket):
-    """
-    Genera el texto de UN ticket (80mm aprox)
-    """
-
+def generar_texto_ticket(empresa, producto):
+    print("Vamos Picante")
     lineas = [
-        ticket["empresa"],
+        empresa,
         "-" * 24,
-        ticket["producto"]
+        producto
     ]
-
     return "\n".join(lineas)

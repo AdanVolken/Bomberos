@@ -146,7 +146,7 @@ def main(page: ft.Page):
         for item in cart:
             product_counts[item["id"]] += 1
 
-        texto_ticket = ventas.generar_texto_ticket(cart, total_text.value)
+        texto_ticket = ventas.generar_texto_ticket("Bomberos", "Vino de productos vendidos:")
 
         ok_print, msg_print = imprimir_ticket(texto_ticket)
 
