@@ -1,41 +1,56 @@
 from datetime import datetime
 
-# Definición de comandos ESC/POS
-# GS ! n (Tamaño de fuente: 0x11 es doble alto y doble ancho)
-FUENTE_GRANDE = "\x1d\x21\x11" 
-# ESC E 1 (Activar negrita)
+# ===== Comandos ESC/POS =====
+
+FUENTE_GRANDE = "\x1d\x21\x11"      # Doble ancho + doble alto
+FUENTE_NORMAL = "\x1d\x21\x00"
+
 NEGRITA_ON = "\x1b\x45\x01"
-# ESC E 0 (Desactivar negrita y volver a fuente normal)
-NORMAL = "\x1b\x45\x00\x1d\x21\x00"
-# ESC a 1 (Centrar texto)
+NEGRITA_OFF = "\x1b\x45\x00"
+
 CENTRO = "\x1b\x61\x01"
+IZQUIERDA = "\x1b\x61\x00"
+
+LINEA = "=" * 24
+
 
 def crear_tickets(productos, empresa):
+    """
+    Devuelve un ticket por producto
+    """
     tickets = []
     for producto in productos:
-        ticket = {
+        tickets.append({
             "empresa": empresa.get("nombre", "Sistema de Tickets"),
             "producto": producto["name"],
             "precio": producto["price"],
             "fecha": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        }
-        tickets.append(ticket)
+        })
     return tickets
 
+
 def generar_texto_ticket(empresa, producto):
-    print("Vamos Picante - Aplicando Formato Grande")
-    
-    # Armamos el ticket con los comandos incrustados
-    # Nota: Los comandos deben ir antes del texto que queremos afectar
-    lineas = [
-        CENTRO,              # Centrar todo el ticket
-        NEGRITA_ON + empresa + NEGRITA_ON,
-        "-" * 24,
-        # Aquí el producto va en tamaño DOBLE (0x11)
-        FUENTE_GRANDE + producto + NORMAL, 
-        "-" * 24,
-        "Gracias por su compra!",
-        "-" * 24,
-        "\n"
-    ]
-    return "".join(lineas)
+    """
+    Genera texto ESC/POS listo para imprimir
+    """
+
+    ticket = (
+        CENTRO +
+
+        # Empresa
+        NEGRITA_ON + empresa + NEGRITA_OFF + "\n" +
+        LINEA + "\n\n" +
+
+        # Producto (grande)
+        FUENTE_GRANDE + producto + FUENTE_NORMAL + "\n\n" +
+
+        LINEA + "\n\n" +
+
+        # Mensaje final
+        "Gracias por su compra\n\n" +
+
+        # Espacio para corte
+        "\n\n\n"
+    )
+
+    return ticket

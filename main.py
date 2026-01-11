@@ -291,7 +291,7 @@ def main(page: ft.Page):
                                     overflow=ft.TextOverflow.ELLIPSIS,
                                 ),
                                 ft.Text(
-                                    f"Stock: {product['cantidad_disponible']}",
+                                    f"Vendido: {product['cantidad_vendida']}",
                                     size=16,
                                     color=(
                                         ft.Colors.RED_400
