@@ -4,6 +4,7 @@ from printer import imprimir_ticket
 import ventas
 from collections import Counter
 from generarExcel import generar_excel_ventas
+from generar_ticket_ventas import generar_texto_ticket_ventas
 from database import (
     init_database,
     get_all_products,
@@ -82,6 +83,44 @@ def main(page: ft.Page):
             except:
                 pass
 
+    def imprimir_ticket_ventas_totales(e):
+        ventas_summary = get_ventas_summary()
+
+        # Filtramos solo productos vendidos
+        ventas_filtradas = [
+            v for v in ventas_summary if v["unidades_vendidas"] > 0
+        ]
+
+        if not ventas_filtradas:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("No hay ventas para imprimir"),
+                bgcolor=ft.Colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        # Generamos el texto del ticket
+        texto_ticket = generar_texto_ticket_ventas(
+            empresa="Bomberos Voluntarios de Humboldt",
+            ventas=ventas_filtradas
+        )
+
+        ok, msg = imprimir_ticket(texto_ticket)
+
+        if ok:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Ticket de ventas impreso correctamente"),
+                bgcolor=ft.Colors.GREEN
+            )
+        else:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Error al imprimir: {msg}"),
+                bgcolor=ft.Colors.RED
+            )
+
+        page.snack_bar.open = True
+        page.update()
 
     # ------------------ CART ------------------
 
@@ -123,7 +162,7 @@ def main(page: ft.Page):
             )
             total += item["price"]
 
-        total_text.value = f"Total: ${int(total)}"
+        total_text.value = f"Total: ${int(total):,}"
         page.update()
 
     def add_to_cart(product):
@@ -150,7 +189,9 @@ def main(page: ft.Page):
             
             ok_print, msg_print = imprimir_ticket(texto_ticket)
             
-            if not ok_print:
+            if ok_print:
+                registrar_venta(item["id"], 1)
+            else:
                 errores += 1
 
         if errores > 0:
@@ -173,44 +214,6 @@ def main(page: ft.Page):
         page.snack_bar.open = True
         page.update()
 
-    # def finalize_venta():
-    #     if not cart:
-    #         page.snack_bar = ft.SnackBar(
-    #             content=ft.Text("El carrito está vacío"),
-    #             bgcolor=ft.Colors.RED
-    #         )
-    #         page.snack_bar.open = True
-    #         return
-
-    #     empresa_info = empresa if empresa else {"nombre": " Bomberos"}
-    #     tickets = ventas.crear_tickets(cart, empresa_info)
-
-    #     product_counts = Counter()
-    #     for item in cart:
-    #         product_counts[item["id"]] += 1
-
-    #     texto_ticket = ventas.generar_texto_ticket("Bomberos", total_text.value)
-
-    #     ok_print, msg_print = imprimir_ticket(texto_ticket)
-
-    #     if not ok_print:
-    #         page.snack_bar = ft.SnackBar(
-    #             content=ft.Text(msg_print),
-    #             bgcolor=ft.Colors.RED
-    #         )
-    #         page.snack_bar.open = True
-    #         return
-
-
-    #     cart.clear()
-    #     update_cart()
-    #     refresh_products() 
-
-    #     page.snack_bar = ft.SnackBar(
-    #         content=ft.Text(f"{len(tickets)} ticket(s) generado(s)"),
-    #         bgcolor=ft.Colors.GREEN
-    #     )
-    #     page.snack_bar.open = True
 
     # ------------------ ADD PRODUCT ------------------
 
@@ -255,11 +258,12 @@ def main(page: ft.Page):
             ft.ElevatedButton("Guardar", on_click=save_product),
         ],
     )
+    page.overlay.append(dialog)
 
     def open_add_product_dialog(e):
-        page.overlay.append(dialog)
         dialog.open = True
         page.update()
+
 
     # ------------------ PRODUCT CARD ------------------
 
@@ -334,21 +338,36 @@ def main(page: ft.Page):
         expand=True,
         controls=[
             ft.Text("Productos", size=40, weight="bold", color=ft.Colors.WHITE),
-            ft.ElevatedButton(
-                "+ Agregar producto",
-                on_click=open_add_product_dialog,
-                bgcolor=ft.Colors.GREY_700,
-                color=ft.Colors.WHITE,
+
+            # FILA DE BOTONES
+            ft.Row(
+                spacing=10,
+                controls=[
+                    ft.ElevatedButton(
+                        "+ Agregar producto",
+                        on_click=open_add_product_dialog,
+                        bgcolor=ft.Colors.GREY_700,
+                        color=ft.Colors.WHITE,
+                    ),
+                    ft.ElevatedButton(
+                        "Descargar Excel",
+                        on_click=descargar_excel_ventas,
+                        bgcolor=ft.Colors.GREEN_700,
+                        color=ft.Colors.WHITE,
+                    ),
+                    ft.ElevatedButton(
+                        "Ticket ventas",
+                        on_click=imprimir_ticket_ventas_totales, 
+                        bgcolor=ft.Colors.BLUE_700,
+                        color=ft.Colors.WHITE,
+                    ),
+                ],
             ),
-            ft.ElevatedButton(
-            "Descargar Excel de ventas",
-            on_click=descargar_excel_ventas,
-            bgcolor=ft.Colors.GREEN_700,
-            color=ft.Colors.WHITE,
-        ),
+
             products_grid,
         ],
     )
+
 
     right_panel = ft.Container(
         width=350,
