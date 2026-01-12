@@ -4,7 +4,8 @@ from printer import imprimir_ticket
 import ventas
 from collections import Counter
 from generarExcel import generar_excel_ventas
-from generar_ticket_ventas import generar_texto_ticket_ventas
+#from generar_ticket_ventas import generar_texto_ticket_ventas
+from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
     init_database,
     get_all_products,
@@ -101,9 +102,9 @@ def main(page: ft.Page):
             return
 
         # Generamos el texto del ticket
-        texto_ticket = generar_texto_ticket_ventas(
-            empresa="Bomberos Voluntarios de Humboldt",
-            ventas=ventas_filtradas
+        texto_ticket = generar_ticket_ventas_totales(
+            "Bomberos Voluntarios de Humboldt",
+            ventas_filtradas
         )
 
         ok, msg = imprimir_ticket(texto_ticket)
