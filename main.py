@@ -146,7 +146,7 @@ def main(page: ft.Page):
         for item in cart:
             # Aquí personalizamos el texto para cada ticket individual
             # Usamos item["name"] para que aparezca el nombre del producto
-            texto_ticket = ventas.generar_texto_ticket("Bomberos", f"{item['name']}")
+            texto_ticket = ventas.generar_texto_ticket("Bomberos Voluntarios de Humboldt", f"{item['name']}")
             
             ok_print, msg_print = imprimir_ticket(texto_ticket)
             
