@@ -128,6 +128,13 @@ def main(page: ft.Page):
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
     total_text = ft.Text("Total: $0", size=20, weight="bold", color=ft.Colors.WHITE)
 
+
+    ultimo_total_text = ft.Text(
+    "Última venta: $0",
+    size=16,
+    color=ft.Colors.WHITE70
+    )
+
     def remove_from_cart(index):
         if 0 <= index < len(cart):
             cart.pop(index)
@@ -171,6 +178,7 @@ def main(page: ft.Page):
         update_cart()
 
     def finalize_venta():
+        total_venta_actual = sum(item["price"] for item in cart)
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
@@ -201,6 +209,8 @@ def main(page: ft.Page):
                 bgcolor=ft.Colors.RED
             )
         else:
+            # Guardamos el total ANTES de limpiar
+            ultimo_total_text.value = f"Última venta: ${int(total_venta_actual):,}"
             # Si todo salió bien, registramos la venta en DB y limpiamos
             # (Opcional: puedes registrar la venta antes del loop)
             cart.clear()
@@ -394,6 +404,8 @@ def main(page: ft.Page):
 
                 # TOTAL (FIJO)
                 total_text,
+                # ÚLTIMA VENTA
+                ultimo_total_text,
 
                 # BOTÓN FIJO ABAJO
                 ft.ElevatedButton(
