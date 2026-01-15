@@ -4,6 +4,7 @@ from printer import imprimir_ticket
 import ventas
 from collections import Counter
 from generarExcel import generar_excel_ventas
+from products_crud_dialog import products_crud_dialog
 #from generar_ticket_ventas import generar_texto_ticket_ventas
 from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
@@ -55,6 +56,8 @@ def main(page: ft.Page):
         for product in get_all_products():
             products_grid.controls.append(create_product_card(product))
         page.update()
+
+    open_products_crud = products_crud_dialog(page, refresh_products)
 
     def descargar_excel_ventas(e):
         ventas_summary = get_ventas_summary()
@@ -126,12 +129,13 @@ def main(page: ft.Page):
     # ------------------ CART ------------------
 
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
-    total_text = ft.Text("Total: $0", size=20, weight="bold", color=ft.Colors.WHITE)
+    total_text = ft.Text("Total: $0", size=25, weight="bold", color=ft.Colors.WHITE)
 
 
     ultimo_total_text = ft.Text(
     "Última venta: $0",
-    size=16,
+    size=22,
+    weight="bold",
     color=ft.Colors.WHITE70
     )
 
@@ -155,13 +159,16 @@ def main(page: ft.Page):
                             expand=True,
                         ),
                         ft.Container(
+                            bgcolor=ft.Colors.RED_700,
+                            border_radius=8,
+                            padding=8,
                             content=ft.Text(
                                 "Eliminar",
-                                color=ft.Colors.RED_500,
+                                color=ft.Colors.WHITE,
                                 size=16,
+                                weight="bold"
                             ),
                             on_click=lambda e, idx=i: remove_from_cart(idx),
-                            padding=ft.padding.symmetric(horizontal=8, vertical=4),
                             ink=True,
                         ),
                     ],
@@ -372,6 +379,12 @@ def main(page: ft.Page):
                         bgcolor=ft.Colors.BLUE_700,
                         color=ft.Colors.WHITE,
                     ),
+                    ft.ElevatedButton(
+                        "Administrar productos",
+                        on_click=lambda e: open_products_crud(),
+                        bgcolor=ft.Colors.ORANGE_700,
+                        color=ft.Colors.WHITE,
+                    ),
                 ],
             ),
 
@@ -413,11 +426,17 @@ def main(page: ft.Page):
                     on_click=lambda e: finalize_venta(),
                     bgcolor=ft.Colors.GREY_600,
                     color=ft.Colors.WHITE,
+                    height=55,   # ← agranda el botón
+                    style=ft.ButtonStyle(
+                        text_style=ft.TextStyle(
+                            size=18,
+                            weight="bold"
+                        )
+                    ),
                 ),
             ]
         ),
     )
-
 
     page.add(
         ft.Row(
