@@ -5,6 +5,7 @@ import ventas
 from collections import Counter
 from generarExcel import generar_excel_ventas
 from products_crud_dialog import products_crud_dialog
+from popupEmpresa import popup_empresa
 #from generar_ticket_ventas import generar_texto_ticket_ventas
 from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
@@ -13,7 +14,8 @@ from database import (
     get_empresa,
     registrar_venta,
     insert_product,
-    get_ventas_summary
+    get_ventas_summary,
+    insert_empresa
 )
 
 
@@ -33,6 +35,28 @@ def main(page: ft.Page):
             bgcolor=ft.Colors.ORANGE
         )
         page.snack_bar.open = True
+
+    # ------------------ EMPRESA CONFIG ------------------
+
+    empresa = get_empresa()
+
+    def on_save_empresa(nombre_empresa, nombre_caja):
+        insert_empresa(
+            nombre=nombre_empresa,
+            nombre_caja=nombre_caja,
+            logo=None
+        )
+
+        nonlocal_empresa()
+
+    def nonlocal_empresa():
+        nonlocal empresa
+        empresa = get_empresa()
+        page.title = empresa["nombre"]
+
+    if not empresa or not empresa.get("nombre_caja"):
+        popup_empresa(page, on_save_empresa)
+
 
     # ------------------ LOAD DATA ------------------
 
@@ -201,7 +225,7 @@ def main(page: ft.Page):
         for item in cart:
             # Aquí personalizamos el texto para cada ticket individual
             # Usamos item["name"] para que aparezca el nombre del producto
-            texto_ticket = ventas.generar_texto_ticket("Bomberos Voluntarios de Humboldt", f"{item['name']}")
+            texto_ticket = ventas.generar_texto_ticket(empresa["nombre"],empresa["nombre_caja"], f"{item['name']}")
             
             ok_print, msg_print = imprimir_ticket(texto_ticket)
             

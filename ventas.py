@@ -24,12 +24,12 @@ def crear_tickets(productos, empresa):
             "empresa": empresa.get("nombre", "Sistema de Tickets"),
             "producto": producto["name"],
             "precio": producto["price"],
-            "fecha": datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            "caja": empresa.get("nombre_caja", "Caja 1"),
         })
     return tickets
 
 
-def generar_texto_ticket(empresa, producto):
+def generar_texto_ticket(empresa,caja, producto):
     """
     Genera texto ESC/POS listo para imprimir
     """
@@ -45,7 +45,7 @@ def generar_texto_ticket(empresa, producto):
         NEGRITA_ON + FUENTE_GRANDE + producto + FUENTE_NORMAL + NEGRITA_OFF + "\n" +
 
         LINEA + "\n" +
-
+        NEGRITA_ON + caja + NEGRITA_OFF + "\n" +
         # Mensaje final
         "Gracias por su compra\n" +
 

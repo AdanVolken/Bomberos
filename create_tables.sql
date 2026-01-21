@@ -5,6 +5,7 @@
 -- Almacena la información de la empresa (nombre y logo)
 CREATE TABLE IF NOT EXISTS empresa (
     nombre TEXT NOT NULL,
+    nombre_caja TEXT,
     logo TEXT
 );
 
