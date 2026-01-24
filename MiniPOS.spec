@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('Sistema_Tickets_DB.db', '.'), ('create_tables.sql', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -3,6 +3,7 @@ import os
 import sys
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
+import shutil
 
 def resource_path(relative_path: str) -> str:
     """
@@ -14,7 +15,37 @@ def resource_path(relative_path: str) -> str:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-DB_NAME = resource_path("Sistema_Tickets_DB.db")
+
+
+def get_app_data_dir():
+    base = os.getenv("APPDATA") or os.path.expanduser("~")
+    path = os.path.join(base, "MiniPOS")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def get_db_path():
+    app_dir = get_app_data_dir()
+    db_path = os.path.join(app_dir, "Sistema_Tickets_DB.db")
+
+    if not os.path.exists(db_path):
+        try:
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        original_db = os.path.join(base_path, "Sistema_Tickets_DB.db")
+
+        if os.path.exists(original_db):
+            shutil.copyfile(original_db, db_path)
+        else:
+            # Caso DEV: crear DB vacía
+            conn = sqlite3.connect(db_path)
+            conn.close()
+
+    return db_path
+
+
+DB_NAME = get_db_path()
 
 def get_connection():
     """Crea y retorna una conexión a la base de datos SQLite"""

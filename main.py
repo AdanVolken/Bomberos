@@ -9,7 +9,7 @@ from popupEmpresa import popup_empresa
 #from generar_ticket_ventas import generar_texto_ticket_ventas
 from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
-    init_database,
+    # init_database,
     get_all_products,
     get_empresa,
     registrar_venta,
@@ -28,17 +28,19 @@ def main(page: ft.Page):
 
     # ------------------ DB INIT ------------------
 
-    if not os.path.exists("Sistema_Tickets_DB.db"):
-        init_database()
-        page.snack_bar = ft.SnackBar(
-            content=ft.Text("Base de datos inicializada."),
-            bgcolor=ft.colors.ORANGE
-        )
-        page.snack_bar.open = True
+    # if not os.path.exists("Sistema_Tickets_DB.db"):
+    #     init_database()
+    #     page.snack_bar = ft.SnackBar(
+    #         content=ft.Text("Base de datos inicializada."),
+    #         bgcolor=ft.colors.ORANGE
+    #     )
+    #     page.snack_bar.open = True
 
     # ------------------ EMPRESA CONFIG ------------------
 
     empresa = get_empresa()
+    popup_empresa_dialog = None
+
 
     def on_save_empresa(nombre_empresa, nombre_caja):
         insert_empresa(
@@ -47,7 +49,12 @@ def main(page: ft.Page):
             logo=None
         )
 
+        if popup_empresa_dialog:
+            popup_empresa_dialog.open = False
+
         nonlocal_empresa()
+        page.update()
+
 
     def nonlocal_empresa():
         nonlocal empresa
@@ -55,7 +62,7 @@ def main(page: ft.Page):
         page.title = empresa["nombre"]
 
     if not empresa or not empresa.get("nombre_caja"):
-        popup_empresa(page, on_save_empresa)
+        popup_empresa_dialog = popup_empresa(page, on_save_empresa)
 
 
     # ------------------ LOAD DATA ------------------
@@ -209,6 +216,7 @@ def main(page: ft.Page):
         update_cart()
 
     def finalize_venta():
+
         total_venta_actual = sum(item["price"] for item in cart)
         if not cart:
             page.snack_bar = ft.SnackBar(
@@ -229,7 +237,7 @@ def main(page: ft.Page):
             
             ok_print, msg_print = imprimir_ticket(texto_ticket)
             
-            if ok_print:
+            if ok_print : 
                 registrar_venta(item["id"], 1)
             else:
                 errores += 1
@@ -405,7 +413,7 @@ def main(page: ft.Page):
                     ),
                     ft.ElevatedButton(
                         "Administrar productos",
-                        on_click=lambda e: open_products_crud(),
+                        on_click=open_products_crud,
                         bgcolor=ft.colors.ORANGE_700,
                         color=ft.colors.WHITE,
                     ),

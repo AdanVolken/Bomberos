@@ -13,14 +13,14 @@ VENTAS = 20
 
 # Coordenadas de productos (AJUSTAR si hace falta)
 PRODUCTOS = [
-    (571, 406),   # Producto 1
-    (889, 391),   # Producto 2
-    (1295, 377),  # Producto 3
+    (120, 310),   # Producto 1
+    (540, 306),   # Producto 2
+    (897, 357),  # Producto 3
 ]
 
 # Botones
-BOTON_IMPRIMIR = (1612, 975)
-BOTON_ELIMINAR = (1825, 139)
+BOTON_IMPRIMIR = (1579, 951)
+BOTON_ELIMINAR = (1826, 132)
 
 print(" Arranca en 5 segundos...")
 time.sleep(5)

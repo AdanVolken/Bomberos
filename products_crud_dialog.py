@@ -9,7 +9,7 @@ def products_crud_dialog(page, on_refresh):
     precio = ft.TextField(label="Precio", keyboard_type=ft.KeyboardType.NUMBER)
     cantidad = ft.TextField(label="Cantidad", keyboard_type=ft.KeyboardType.NUMBER)
 
-    products_list = ft.Column(scroll=ft.ScrollMode.AUTO)
+    products_list = ft.Column(scroll=ft.ScrollMode.AUTO, height=300)  # Agregado height
 
     def load_products():
         products_list.controls.clear()
@@ -26,11 +26,11 @@ def products_crud_dialog(page, on_refresh):
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
-                                        icon=ft.Icons.EDIT,
+                                        icon=ft.icons.EDIT,
                                         on_click=lambda e, prod=p: select_product(prod)
                                     ),
                                     ft.IconButton(
-                                        icon=ft.Icons.DELETE,
+                                        icon=ft.icons.DELETE,
                                         icon_color=ft.colors.RED,
                                         on_click=lambda e, pid=p["id"]: delete(pid)
                                     ),
@@ -50,6 +50,9 @@ def products_crud_dialog(page, on_refresh):
         page.update()
 
     def save(e):
+        if not nombre.value or not precio.value or not cantidad.value:
+            clear_form()
+            return
         if selected_product["id"]:
             update_product(
                 selected_product["id"],
@@ -71,6 +74,7 @@ def products_crud_dialog(page, on_refresh):
 
     def delete(pid):
         delete_product(pid)
+        clear_form()   
         load_products()
         on_refresh()
 
@@ -79,34 +83,42 @@ def products_crud_dialog(page, on_refresh):
         nombre.value = ""
         precio.value = ""
         cantidad.value = ""
+        page.update()
+
+    def close(e=None):
+        dialog.open = False
+        clear_form()
+        page.update()
 
     dialog = ft.AlertDialog(
         modal=True,
         title=ft.Text("Administrar productos"),
-        content=ft.Column(
+        content=ft.Container(
             width=500,
-            controls=[
-                products_list,
-                ft.Divider(),
-                nombre,
-                precio,
-                cantidad,
-            ]
+            content=ft.Column(
+                tight=True,
+                scroll=ft.ScrollMode.AUTO,
+                controls=[
+                    products_list,
+                    ft.Divider(),
+                    nombre,
+                    precio,
+                    cantidad,
+                ]
+            )
         ),
         actions=[
-            ft.TextButton("Cerrar", on_click=lambda e: close()),
+            ft.TextButton("Cerrar", on_click=close),
             ft.ElevatedButton("Guardar", on_click=save),
         ],
     )
 
-    def open():
+    def open(e=None):
         load_products()
         dialog.open = True
         page.update()
 
-    def close():
-        dialog.open = False
-        page.update()
-
+    # IMPORTANTE: Agregar el diálogo al overlay inmediatamente
     page.overlay.append(dialog)
+    
     return open
