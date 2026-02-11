@@ -7,6 +7,7 @@ from generarExcel import generar_excel_ventas
 from products_crud_dialog import products_crud_dialog
 from popupEmpresa import popup_empresa
 #from generar_ticket_ventas import generar_texto_ticket_ventas
+from inicio_sesion import mostrar_login 
 from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
     # init_database,

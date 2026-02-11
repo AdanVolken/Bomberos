@@ -4,6 +4,8 @@ import sys
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 import shutil
+import uuid
+import hashlib
 
 def resource_path(relative_path: str) -> str:
     """
@@ -282,3 +284,83 @@ def get_ventas_summary() -> List[Dict]:
         "stock_actual": r["cantidad_disponible"] or 0,
         "ingresos_totales": r["ingresos_totales"] or 0
     } for r in rows]
+
+
+# ==================== LICENCIA ====================
+
+def crear_licencia(cliente: str, password: str, max_maquinas: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    cursor.execute("""
+        INSERT INTO licencia (cliente, password_hash, max_maquinas)
+        VALUES (?, ?, ?)
+    """, (cliente, password_hash, max_maquinas))
+
+    conn.commit()
+    conn.close()
+
+def validar_licencia(cliente: str, password: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    cursor.execute("""
+        SELECT id, max_maquinas FROM licencia
+        WHERE cliente = ? AND password_hash = ?
+    """, (cliente, password_hash))
+
+    licencia = cursor.fetchone()
+
+    if not licencia:
+        conn.close()
+        return False, "Usuario o contraseña incorrectos"
+
+    licencia_id = licencia["id"]
+    max_maquinas = licencia["max_maquinas"]
+
+    mac_actual = get_mac_address()
+
+    # Ver si ya está registrada esta MAC
+    cursor.execute("""
+        SELECT id FROM licencia_maquinas
+        WHERE licencia_id = ? AND mac = ?
+    """, (licencia_id, mac_actual))
+
+    existe = cursor.fetchone()
+
+    if existe:
+        conn.close()
+        return True, "Licencia válida"
+
+    # Contar máquinas actuales
+    cursor.execute("""
+        SELECT COUNT(*) as total FROM licencia_maquinas
+        WHERE licencia_id = ?
+    """, (licencia_id,))
+
+    total_maquinas = cursor.fetchone()["total"]
+
+    if total_maquinas >= max_maquinas:
+        conn.close()
+        return False, "Se alcanzó el límite de máquinas permitidas"
+
+    # Registrar nueva máquina
+    cursor.execute("""
+        INSERT INTO licencia_maquinas (licencia_id, mac, fecha_activacion)
+        VALUES (?, ?, ?)
+    """, (licencia_id, mac_actual, datetime.now().isoformat()))
+
+    conn.commit()
+    conn.close()
+
+    return True, "Máquina registrada correctamente"
+
+
+# ==================== UTILIDADES ====================
+def get_mac_address():
+    return ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
+                     for ele in range(0, 8*6, 8)][::-1])

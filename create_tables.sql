@@ -20,3 +20,19 @@ CREATE TABLE IF NOT EXISTS productos (
     cantidad_disponible INTEGER DEFAULT 0
 );
 
+-- ==================== LICENCIAS ====================
+
+CREATE TABLE IF NOT EXISTS licencia (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    max_maquinas INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS licencia_maquinas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    licencia_id INTEGER NOT NULL,
+    mac TEXT NOT NULL,
+    fecha_activacion TEXT NOT NULL,
+    FOREIGN KEY (licencia_id) REFERENCES licencia(id)
+);
