@@ -81,21 +81,106 @@ def init_database():
     finally:
         conn.close()
 
+# ==================== MIGRACIONES ====================
+
+def crear_tablas_si_no_existen():
+    """Crea todas las tablas necesarias si no existen"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Verificar y crear tabla empresa
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS empresa (
+                nombre TEXT NOT NULL,
+                nombre_caja TEXT,
+                logo TEXT
+            )
+        """)
+        
+        # Verificar si la columna nombre_caja existe en empresa
+        cursor.execute("PRAGMA table_info(empresa)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if "nombre_caja" not in columns:
+            cursor.execute("ALTER TABLE empresa ADD COLUMN nombre_caja TEXT")
+        
+        # Crear tabla productos
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS productos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL,
+                precio REAL NOT NULL,
+                imagen TEXT,
+                cantidad_vendida INTEGER DEFAULT 0,
+                cantidad_disponible INTEGER DEFAULT 0
+            )
+        """)
+        
+        # Crear tabla licencia
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS licencia (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cliente TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                max_maquinas INTEGER NOT NULL
+            )
+        """)
+        
+        # Crear tabla licencia_maquinas
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS licencia_maquinas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                licencia_id INTEGER NOT NULL,
+                mac TEXT NOT NULL,
+                fecha_activacion TEXT NOT NULL,
+                FOREIGN KEY (licencia_id) REFERENCES licencia(id)
+            )
+        """)
+        
+        conn.commit()
+    except Exception as e:
+        print(f"[ERROR] Error al crear tablas: {e}")
+        conn.rollback()
+    finally:
+        conn.close()
+
+# Ejecutar creación de tablas al importar el módulo
+crear_tablas_si_no_existen()
+
 # ==================== EMPRESA ====================
 
 def get_empresa() -> Optional[Dict]:
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT nombre, nombre_caja, logo FROM empresa LIMIT 1")
-    row = cursor.fetchone()
-    conn.close()
+    
+    # Intentar obtener todas las columnas disponibles
+    try:
+        cursor.execute("SELECT * FROM empresa LIMIT 1")
+        row = cursor.fetchone()
+        conn.close()
 
-    if row:
-        return {
-            "nombre": row["nombre"],
-            "nombre_caja": row["nombre_caja"] if "nombre_caja" in row.keys() else None,
-            "logo": row["logo"] if row["logo"] else None
-        }
+        if row:
+            return {
+                "nombre": row["nombre"] if "nombre" in row.keys() else None,
+                "nombre_caja": row["nombre_caja"] if "nombre_caja" in row.keys() else None,
+                "logo": row["logo"] if "logo" in row.keys() else None
+            }
+    except Exception as e:
+        # Si falla, intentar solo con nombre y logo
+        try:
+            cursor.execute("SELECT nombre, logo FROM empresa LIMIT 1")
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                return {
+                    "nombre": row["nombre"],
+                    "nombre_caja": None,
+                    "logo": row["logo"] if "logo" in row.keys() else None
+                }
+        except:
+            pass
+        conn.close()
+    
     return None
 
 def insert_empresa(nombre: str, nombre_caja: str, logo: Optional[str] = None):
@@ -359,6 +444,39 @@ def validar_licencia(cliente: str, password: str):
 
     return True, "Máquina registrada correctamente"
 
+
+def obtener_maquinas_licencia(licencia_id: int):
+    """Obtiene todas las máquinas registradas para una licencia"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, mac, fecha_activacion 
+        FROM licencia_maquinas
+        WHERE licencia_id = ?
+        ORDER BY fecha_activacion DESC
+    """, (licencia_id,))
+    
+    maquinas = cursor.fetchall()
+    conn.close()
+    
+    return [{
+        "id": m["id"],
+        "mac": m["mac"],
+        "fecha_activacion": m["fecha_activacion"]
+    } for m in maquinas]
+
+def eliminar_maquina_licencia(maquina_id: int):
+    """Elimina una máquina registrada de una licencia"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute("DELETE FROM licencia_maquinas WHERE id = ?", (maquina_id,))
+    
+    conn.commit()
+    conn.close()
+    
+    return True
 
 # ==================== UTILIDADES ====================
 def get_mac_address():

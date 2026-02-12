@@ -18,23 +18,27 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
     empresa_input = ft.TextField(
         label="Nombre de la empresa",
         autofocus=True,
-        bgcolor=ft.colors.GREY_700,
-        color=ft.colors.WHITE,
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
+        bgcolor=ft.Colors.GREY_700,
+        color=ft.Colors.WHITE,
+        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
     )
 
     caja_input = ft.TextField(
         label="Nombre de la caja",
-        bgcolor=ft.colors.GREY_700,
-        color=ft.colors.WHITE,
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
+        bgcolor=ft.Colors.GREY_700,
+        color=ft.Colors.WHITE,
+        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
     )
 
     error_text = ft.Text(
         "",
-        color=ft.colors.RED_400,
+        color=ft.Colors.RED_400,
         size=14
     )
+
+    def cerrar(e):
+        dialog.open = False
+        page.update()
 
     def guardar(e):
         if not empresa_input.value or not caja_input.value:
@@ -52,10 +56,10 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.colors.GREY_800,
+        bgcolor=ft.Colors.GREY_800,
         title=ft.Text(
             "Configuración inicial",
-            color=ft.colors.WHITE,
+            color=ft.Colors.WHITE,
             weight="bold",
             size=20
         ),
@@ -65,7 +69,7 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
             controls=[
                 ft.Text(
                     "Antes de comenzar, configurá la empresa y la caja",
-                    color=ft.colors.WHITE70,
+                    color=ft.Colors.WHITE70,
                     size=14
                 ),
                 empresa_input,
@@ -74,11 +78,18 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
             ],
         ),
         actions=[
+            ft.TextButton(
+                "Cerrar",
+                on_click=cerrar,
+                style=ft.ButtonStyle(
+                    color=ft.Colors.WHITE70
+                )
+            ),
             ft.ElevatedButton(
                 "Guardar",
                 on_click=guardar,
-                bgcolor=ft.colors.GREEN_700,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.GREEN_700,
+                color=ft.Colors.WHITE,
                 height=45
             )
         ],
