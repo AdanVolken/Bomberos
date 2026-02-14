@@ -36,3 +36,44 @@ CREATE TABLE IF NOT EXISTS licencia_maquinas (
     fecha_activacion TEXT NOT NULL,
     FOREIGN KEY (licencia_id) REFERENCES licencia(id)
 );
+
+-- ==================== MEDIOS DE PAGO ====================
+
+CREATE TABLE IF NOT EXISTS medios_pago (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL UNIQUE,
+    activo INTEGER DEFAULT 1
+);
+
+-- ==================== VENTAS ====================
+
+CREATE TABLE IF NOT EXISTS ventas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha_hora TEXT NOT NULL,
+    total REAL NOT NULL,
+    medio_pago_id INTEGER NOT NULL,
+    corte_id INTEGER,
+    FOREIGN KEY (medio_pago_id) REFERENCES medios_pago(id),
+    FOREIGN KEY (corte_id) REFERENCES cortes_caja(id)
+);
+
+-- ==================== DETALLE DE VENTAS ====================
+
+CREATE TABLE IF NOT EXISTS ventas_detalle (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    venta_id INTEGER NOT NULL,
+    producto_id INTEGER NOT NULL,
+    cantidad INTEGER NOT NULL,
+    precio_unitario REAL NOT NULL,
+    FOREIGN KEY (venta_id) REFERENCES ventas(id),
+    FOREIGN KEY (producto_id) REFERENCES productos(id)
+);
+
+-- ==================== CORTES DE CAJA ====================
+
+CREATE TABLE IF NOT EXISTS cortes_caja (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha_hora TEXT NOT NULL,
+    total_acumulado REAL NOT NULL,
+    ultima_venta_id INTEGER NOT NULL
+);

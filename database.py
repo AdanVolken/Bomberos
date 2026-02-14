@@ -6,6 +6,10 @@ from datetime import datetime
 import shutil
 import uuid
 import hashlib
+from datetime import datetime
+
+
+
 
 def resource_path(relative_path: str) -> str:
     """
@@ -87,9 +91,9 @@ def crear_tablas_si_no_existen():
     """Crea todas las tablas necesarias si no existen"""
     conn = get_connection()
     cursor = conn.cursor()
-    
+
     try:
-        # Verificar y crear tabla empresa
+        # ==================== EMPRESA ====================
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS empresa (
                 nombre TEXT NOT NULL,
@@ -97,14 +101,14 @@ def crear_tablas_si_no_existen():
                 logo TEXT
             )
         """)
-        
+
         # Verificar si la columna nombre_caja existe en empresa
         cursor.execute("PRAGMA table_info(empresa)")
         columns = [column[1] for column in cursor.fetchall()]
         if "nombre_caja" not in columns:
             cursor.execute("ALTER TABLE empresa ADD COLUMN nombre_caja TEXT")
-        
-        # Crear tabla productos
+
+        # ==================== PRODUCTOS ====================
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS productos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,8 +119,8 @@ def crear_tablas_si_no_existen():
                 cantidad_disponible INTEGER DEFAULT 0
             )
         """)
-        
-        # Crear tabla licencia
+
+        # ==================== LICENCIAS ====================
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS licencia (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,8 +129,7 @@ def crear_tablas_si_no_existen():
                 max_maquinas INTEGER NOT NULL
             )
         """)
-        
-        # Crear tabla licencia_maquinas
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS licencia_maquinas (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -136,13 +139,66 @@ def crear_tablas_si_no_existen():
                 FOREIGN KEY (licencia_id) REFERENCES licencia(id)
             )
         """)
-        
+
+        # ==================== MEDIOS DE PAGO ====================
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS medios_pago (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nombre TEXT NOT NULL UNIQUE,
+                activo INTEGER DEFAULT 1
+            )
+        """)
+
+        # Insertar medio de pago por defecto si no existe
+        cursor.execute("""
+            INSERT OR IGNORE INTO medios_pago (id, nombre, activo)
+            VALUES (1, 'Efectivo', 1)
+        """)
+
+        # ==================== VENTAS ====================
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ventas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_hora TEXT NOT NULL,
+                total REAL NOT NULL,
+                medio_pago_id INTEGER NOT NULL,
+                corte_id INTEGER,
+                FOREIGN KEY (medio_pago_id) REFERENCES medios_pago(id),
+                FOREIGN KEY (corte_id) REFERENCES cortes_caja(id)
+            )
+        """)
+
+        # ==================== DETALLE DE VENTAS ====================
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ventas_detalle (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                venta_id INTEGER NOT NULL,
+                producto_id INTEGER NOT NULL,
+                cantidad INTEGER NOT NULL,
+                precio_unitario REAL NOT NULL,
+                FOREIGN KEY (venta_id) REFERENCES ventas(id),
+                FOREIGN KEY (producto_id) REFERENCES productos(id)
+            )
+        """)
+
+        # ==================== CORTES DE CAJA ====================
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cortes_caja (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_hora TEXT NOT NULL,
+                total_acumulado REAL NOT NULL,
+                ultima_venta_id INTEGER NOT NULL
+            )
+        """)
+
         conn.commit()
+
     except Exception as e:
         print(f"[ERROR] Error al crear tablas: {e}")
         conn.rollback()
     finally:
         conn.close()
+
 
 # Ejecutar creación de tablas al importar el módulo
 crear_tablas_si_no_existen()
@@ -482,3 +538,176 @@ def eliminar_maquina_licencia(maquina_id: int):
 def get_mac_address():
     return ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff)
                      for ele in range(0, 8*6, 8)][::-1])
+
+# ===================== MEDIOS DE PAGO ====================
+def get_medios_pago(activos_only: bool = True):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if activos_only:
+        cursor.execute("""
+            SELECT id, nombre FROM medios_pago
+            WHERE activo = 1
+            ORDER BY nombre
+        """)
+    else:
+        cursor.execute("""
+            SELECT id, nombre, activo FROM medios_pago
+            ORDER BY nombre
+        """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+# ===================== VENTAS ====================
+def insert_medio_pago(nombre: str):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO medios_pago (nombre, activo)
+        VALUES (?, 1)
+    """, (nombre,))
+
+    conn.commit()
+    conn.close()
+
+
+def toggle_medio_pago(medio_id: int, activo: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE medios_pago
+        SET activo = ?
+        WHERE id = ?
+    """, (activo, medio_id))
+
+    conn.commit()
+    conn.close()
+
+
+
+# ==================== VENTAS REALES ====================
+def crear_venta(total: float, medio_pago_id: int) -> int:
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    fecha_hora = datetime.now().isoformat()
+
+    cursor.execute("""
+        INSERT INTO ventas (fecha_hora, total, medio_pago_id)
+        VALUES (?, ?, ?)
+    """, (fecha_hora, total, medio_pago_id))
+
+    venta_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return venta_id
+
+# ===================== DETALLE DE VENTAS =====================
+def insertar_detalle_venta(venta_id: int, producto_id: int, cantidad: int, precio_unitario: float):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO ventas_detalle (venta_id, producto_id, cantidad, precio_unitario)
+        VALUES (?, ?, ?, ?)
+    """, (venta_id, producto_id, cantidad, precio_unitario))
+
+    conn.commit()
+    conn.close()
+
+# ==================== RESUMEN POR MEDIO DE PAGO ====================
+def resumen_por_medio_pago():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT m.nombre, SUM(v.total) as total
+        FROM ventas v
+        JOIN medios_pago m ON v.medio_pago_id = m.id
+        GROUP BY m.nombre
+        ORDER BY total DESC
+    """)
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+# ==================== CORTE DE CAJA ====================
+
+def obtener_ultimo_corte():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, fecha_hora
+        FROM cortes_caja
+        ORDER BY id DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return dict(row) if row else None
+
+
+def crear_corte_caja(total_acumulado: float, ultima_venta_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    fecha_hora = datetime.now().isoformat()
+
+    cursor.execute("""
+        INSERT INTO cortes_caja (fecha_hora, total_acumulado, ultima_venta_id)
+        VALUES (?, ?, ?)
+    """, (fecha_hora, total_acumulado, ultima_venta_id))
+
+    corte_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+
+    return corte_id
+
+def obtener_ultima_venta_id():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id FROM ventas
+        ORDER BY id DESC
+        LIMIT 1
+    """)
+
+    row = cursor.fetchone()
+    conn.close()
+
+    return row["id"] if row else 0
+
+
+
+def ventas_desde_ultimo_corte():
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    ultimo_corte = obtener_ultimo_corte()
+
+    if ultimo_corte:
+        cursor.execute("""
+            SELECT * FROM ventas
+            WHERE id > ?
+        """, (ultimo_corte["ultima_venta_id"],))
+    else:
+        cursor.execute("SELECT * FROM ventas")
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]

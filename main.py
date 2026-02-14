@@ -8,7 +8,9 @@ from products_crud_dialog import products_crud_dialog
 from popupEmpresa import popup_empresa
 #from generar_ticket_ventas import generar_texto_ticket_ventas
 from inicio_sesion import mostrar_login
+from corte_caja import realizar_corte
 from administracion_cuentas import mostrar_admin_cuentas 
+from admin_medios_pago import mostrar_admin_medios_pago
 from generar_ticket_ventas import generar_ticket_ventas_totales
 from database import (
     # init_database,
@@ -17,7 +19,10 @@ from database import (
     registrar_venta,
     insert_product,
     get_ventas_summary,
-    insert_empresa
+    insert_empresa,
+    crear_venta,
+    insertar_detalle_venta,
+    get_medios_pago
 )
 
 
@@ -163,6 +168,18 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         page.snack_bar.open = True
         page.update()
 
+    # ------------------ CORTE DE CAJA ------------------
+    def ejecutar_corte():
+        ok, msg = realizar_corte()
+
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text(msg),
+            bgcolor=ft.Colors.GREEN if ok else ft.Colors.RED
+        )
+        page.snack_bar.open = True
+        page.update()
+
+
     # ------------------ CART ------------------
 
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
@@ -175,6 +192,16 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     weight="bold",
     color=ft.Colors.WHITE70
     )
+
+    medio_pago_dropdown = ft.Dropdown(
+    label="Medio de pago",
+    value="1",  # Efectivo por defecto (id 1)
+    width=250,
+    options=[
+        ft.dropdown.Option(str(mp["id"]), mp["nombre"])
+        for mp in get_medios_pago()
+    ],
+)
 
     def remove_from_cart(index):
         if 0 <= index < len(cart):
@@ -221,9 +248,22 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         cart.append(product)
         update_cart()
 
+    def refresh_medios_pago_dropdown():
+            medios = get_medios_pago()
+
+            medio_pago_dropdown.options = [
+                ft.dropdown.Option(str(mp["id"]), mp["nombre"])
+                for mp in medios
+            ]
+
+            # Si el medio actual ya no existe, volver a efectivo
+            if not any(opt.key == medio_pago_dropdown.value for opt in medio_pago_dropdown.options):
+                medio_pago_dropdown.value = medio_pago_dropdown.options[0].key
+
+            page.update()
+
     def finalize_venta():
 
-        total_venta_actual = sum(item["price"] for item in cart)
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
@@ -233,19 +273,51 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
             page.update()
             return
 
-        # --- NUEVA LÓGICA: Un ticket por producto ---
+        total_venta_actual = sum(item["price"] for item in cart)
+
+        #  Obtener medio de pago seleccionado
+        medio_pago_id = int(medio_pago_dropdown.value)
+
+
+
+
+        if not medio_pago_id:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Seleccione un medio de pago"),
+                bgcolor=ft.Colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        #  Crear venta principal
+        venta_id = crear_venta(total_venta_actual, int(medio_pago_id))
+
         errores = 0
-        
+
         for item in cart:
-            # Aquí personalizamos el texto para cada ticket individual
-            # Usamos item["name"] para que aparezca el nombre del producto
-            texto_ticket = ventas.generar_texto_ticket(empresa["nombre"],empresa["nombre_caja"], f"{item['name']}")
-            
-            ok_print, msg_print = imprimir_ticket(texto_ticket)
-            
-            if ok_print : 
-                registrar_venta(item["id"], 1)
-            else:
+
+            # Insertar detalle de venta
+            insertar_detalle_venta(
+                venta_id=venta_id,
+                producto_id=item["id"],
+                cantidad=1,
+                precio_unitario=item["price"]
+            )
+
+            # Mantener tu lógica actual de stock
+            ok_stock, _ = registrar_venta(item["id"], 1)
+
+            # Mantener tu lógica de impresión individual
+            texto_ticket = ventas.generar_texto_ticket(
+                empresa["nombre"],
+                empresa["nombre_caja"],
+                f"{item['name']}"
+            )
+
+            ok_print, _ = imprimir_ticket(texto_ticket)
+
+            if not ok_print or not ok_stock:
                 errores += 1
 
         if errores > 0:
@@ -254,21 +326,19 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 bgcolor=ft.Colors.RED
             )
         else:
-            # Guardamos el total ANTES de limpiar
             ultimo_total_text.value = f"Última venta: ${int(total_venta_actual):,}"
-            # Si todo salió bien, registramos la venta en DB y limpiamos
-            # (Opcional: puedes registrar la venta antes del loop)
             cart.clear()
             update_cart()
-            refresh_products() 
+            refresh_products()
 
             page.snack_bar = ft.SnackBar(
-                content=ft.Text("Todos los tickets impresos y cortados"),
+                content=ft.Text("Venta registrada correctamente"),
                 bgcolor=ft.Colors.GREEN
             )
-        
+
         page.snack_bar.open = True
         page.update()
+
 
 
     # ------------------ ADD PRODUCT ------------------
@@ -417,6 +487,12 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
             color=ft.Colors.WHITE,
         ),
         ft.ElevatedButton(
+            "Medios de pago",
+            bgcolor=ft.Colors.TEAL_700,
+            color=ft.Colors.WHITE,
+            on_click=lambda e: mostrar_admin_medios_pago(page, refresh_medios_pago_dropdown)
+        ),
+        ft.ElevatedButton(
             "Cambiar caja",
             bgcolor=ft.Colors.GREY_700,
             color=ft.Colors.WHITE,
@@ -425,6 +501,12 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 on_save_empresa,
                 empresa
             )
+        ),
+        ft.ElevatedButton(
+            "Corte de Caja",
+            bgcolor=ft.Colors.RED_700,
+            color=ft.Colors.WHITE,
+            on_click=lambda e: ejecutar_corte()
         ),
     ]
     
@@ -479,6 +561,9 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 total_text,
                 # ÚLTIMA VENTA
                 ultimo_total_text,
+                # MEDIO DE PAGO
+                medio_pago_dropdown,
+                
 
                 # BOTÓN FIJO ABAJO
                 ft.ElevatedButton(
