@@ -606,4 +606,5 @@ def main(page: ft.Page):
     mostrar_login(page, on_login_success)
 
 
-ft.run(main)
+if __name__ == "__main__":
+    ft.app(target=main)
