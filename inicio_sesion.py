@@ -14,8 +14,8 @@ def mostrar_login(page: ft.Page, on_success):
     )
 
     def intentar_login(e):
-        usuario = usuario_input.value.strip().lower() if usuario_input.value else ""
-        password = password_input.value.strip().lower() if password_input.value else ""
+        usuario = usuario_input.value.strip() if usuario_input.value else ""
+        password = password_input.value.strip() if password_input.value else ""
 
         # Caso especial: usuario admin
         if usuario == "admin" and password == "daleboca":
