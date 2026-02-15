@@ -3,6 +3,55 @@ import hashlib
 from database import get_connection, obtener_maquinas_licencia, eliminar_maquina_licencia
 
 def mostrar_admin_cuentas(page: ft.Page):
+    def crear_nueva_cuenta(e):
+        if not nuevo_usuario.value or not nueva_password.value or not nuevo_max_maquinas.value:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Completa todos los campos"),
+                bgcolor=ft.colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        try:
+            max_m = int(nuevo_max_maquinas.value)
+            if max_m < 1:
+                raise ValueError()
+        except:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("Máx. máquinas debe ser mayor a 0"),
+                bgcolor=ft.colors.RED
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        hash_pass = hashlib.sha256(nueva_password.value.encode()).hexdigest()
+
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO licencia (cliente, password_hash, max_maquinas) VALUES (?, ?, ?)",
+            (nuevo_usuario.value, hash_pass, max_m)
+        )
+
+        conn.commit()
+        conn.close()
+
+        nuevo_usuario.value = ""
+        nueva_password.value = ""
+        nuevo_max_maquinas.value = ""
+
+        refrescar_lista()
+
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text("Cuenta creada correctamente"),
+            bgcolor=ft.colors.GREEN
+        )
+        page.snack_bar.open = True
+        page.update()
+
 
     def refrescar_lista():
         conn = get_connection()
@@ -248,6 +297,29 @@ def mostrar_admin_cuentas(page: ft.Page):
                 )
             )
 
+    nuevo_usuario = ft.TextField(
+        label="Usuario",
+        width=200,
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE
+    )
+
+    nueva_password = ft.TextField(
+        label="Contraseña",
+        password=True,
+        width=200,
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE
+    )
+
+    nuevo_max_maquinas = ft.TextField(
+        label="Máx. máquinas",
+        width=150,
+        keyboard_type=ft.KeyboardType.NUMBER,
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE
+    )
+
     lista = ft.Column(
         scroll=ft.ScrollMode.AUTO,
         spacing=0
@@ -268,8 +340,34 @@ def mostrar_admin_cuentas(page: ft.Page):
             width=750,
             height=550,
             padding=10,
-            content=lista
+            content=ft.Column(
+                controls=[
+                    ft.Text(
+                        "Crear nueva cuenta",
+                        size=18,
+                        weight="bold",
+                        color=ft.colors.WHITE
+                    ),
+                    ft.Row(
+                        controls=[
+                            nuevo_usuario,
+                            nueva_password,
+                            nuevo_max_maquinas,
+                            ft.ElevatedButton(
+                                "Crear cuenta",
+                                on_click=crear_nueva_cuenta,
+                                bgcolor=ft.colors.BLUE_700,
+                                color=ft.colors.WHITE
+                            )
+                        ],
+                        spacing=10
+                    ),
+                    ft.Divider(),
+                    lista
+                ]
+            )
         ),
+
         actions=[
             ft.TextButton(
                 "Cerrar",
