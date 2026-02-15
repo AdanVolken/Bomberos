@@ -23,11 +23,11 @@ def mostrar_admin_cuentas(page: ft.Page):
                 label="Máx. máquinas",
                 value=str(max_maquinas),
                 width=130,
-                bgcolor=ft.Colors.GREY_700,
-                color=ft.Colors.WHITE,
-                label_style=ft.TextStyle(color=ft.Colors.WHITE70),
-                border_color=ft.Colors.GREY_600,
-                focused_border_color=ft.Colors.BLUE_400,
+                bgcolor=ft.colors.GREY_700,
+                color=ft.colors.WHITE,
+                label_style=ft.TextStyle(color=ft.colors.WHITE70),
+                border_color=ft.colors.GREY_600,
+                focused_border_color=ft.colors.BLUE_400,
                 keyboard_type=ft.KeyboardType.NUMBER
             )
 
@@ -35,11 +35,11 @@ def mostrar_admin_cuentas(page: ft.Page):
                 label="Nueva contraseña",
                 password=True,
                 width=200,
-                bgcolor=ft.Colors.GREY_700,
-                color=ft.Colors.WHITE,
-                label_style=ft.TextStyle(color=ft.Colors.WHITE70),
-                border_color=ft.Colors.GREY_600,
-                focused_border_color=ft.Colors.BLUE_400
+                bgcolor=ft.colors.GREY_700,
+                color=ft.colors.WHITE,
+                label_style=ft.TextStyle(color=ft.colors.WHITE70),
+                border_color=ft.colors.GREY_600,
+                focused_border_color=ft.colors.BLUE_400
             )
 
             # Obtener máquinas registradas
@@ -47,7 +47,7 @@ def mostrar_admin_cuentas(page: ft.Page):
             maquinas_text = ft.Text(
                 f"Máquinas registradas: {len(maquinas)}/{max_maquinas}",
                 size=14,
-                color=ft.Colors.WHITE70,
+                color=ft.colors.WHITE70,
                 weight="bold"
             )
 
@@ -77,7 +77,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                             content=ft.Text(
                                 "No hay máquinas registradas",
                                 size=12,
-                                color=ft.Colors.WHITE54,
+                                color=ft.colors.WHITE54,
                                 italic=True,
                                 text_align=ft.TextAlign.CENTER
                             ),
@@ -93,9 +93,9 @@ def mostrar_admin_cuentas(page: ft.Page):
                         macs_lista.controls.append(
                             ft.Container(
                                 padding=10,
-                                bgcolor=ft.Colors.GREY_700,
+                                bgcolor=ft.colors.GREY_700,
                                 border_radius=8,
-                                border=ft.border.all(1, ft.Colors.GREY_600),
+                                border=ft.border.all(1, ft.colors.GREY_600),
                                 content=ft.Row(
                                     controls=[
                                         ft.Column(
@@ -104,13 +104,13 @@ def mostrar_admin_cuentas(page: ft.Page):
                                                 ft.Text(
                                                     mac_addr,
                                                     size=13,
-                                                    color=ft.Colors.WHITE,
+                                                    color=ft.colors.WHITE,
                                                     weight="bold"
                                                 ),
                                                 ft.Text(
                                                     f"Activada: {fecha[:10]}",
                                                     size=11,
-                                                    color=ft.Colors.WHITE70
+                                                    color=ft.colors.WHITE70
                                                 )
                                             ],
                                             expand=True
@@ -118,8 +118,8 @@ def mostrar_admin_cuentas(page: ft.Page):
                                         ft.ElevatedButton(
                                             "Eliminar",
                                             on_click=lambda e, mid=mac_id: eliminar_mac(mid),
-                                            bgcolor=ft.Colors.RED_700,
-                                            color=ft.Colors.WHITE,
+                                            bgcolor=ft.colors.RED_700,
+                                            color=ft.colors.WHITE,
                                             height=35,
                                             width=100,
                                             style=ft.ButtonStyle(
@@ -142,7 +142,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                 actualizar_macs()
                 page.snack_bar = ft.SnackBar(
                     content=ft.Text("MAC eliminada correctamente"),
-                    bgcolor=ft.Colors.GREEN
+                    bgcolor=ft.colors.GREEN
                 )
                 page.snack_bar.open = True
                 page.update()
@@ -165,7 +165,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                     except ValueError:
                         page.snack_bar = ft.SnackBar(
                             content=ft.Text("El valor de máquinas debe ser un número mayor a 0"),
-                            bgcolor=ft.Colors.RED
+                            bgcolor=ft.colors.RED
                         )
                         page.snack_bar.open = True
                         page.update()
@@ -176,7 +176,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                     if len(nueva_pass.value) < 4:
                         page.snack_bar = ft.SnackBar(
                             content=ft.Text("La contraseña debe tener al menos 4 caracteres"),
-                            bgcolor=ft.Colors.RED
+                            bgcolor=ft.colors.RED
                         )
                         page.snack_bar.open = True
                         page.update()
@@ -195,7 +195,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                 actualizar_macs()
                 page.snack_bar = ft.SnackBar(
                     content=ft.Text("Cuenta actualizada correctamente"),
-                    bgcolor=ft.Colors.GREEN
+                    bgcolor=ft.colors.GREEN
                 )
                 page.snack_bar.open = True
                 page.update()
@@ -208,7 +208,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                 ft.Container(
                     padding=15,
                     margin=ft.margin.only(bottom=10),
-                    bgcolor=ft.Colors.GREY_800,
+                    bgcolor=ft.colors.GREY_800,
                     border_radius=10,
                     content=ft.Column(
                         spacing=12,
@@ -218,7 +218,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                                 cliente,
                                 size=18,
                                 weight="bold",
-                                color=ft.Colors.WHITE
+                                color=ft.colors.WHITE
                             ),
                             # Campos de edición
                             ft.Row(
@@ -228,8 +228,8 @@ def mostrar_admin_cuentas(page: ft.Page):
                                     ft.ElevatedButton(
                                         "Guardar",
                                         on_click=guardar,
-                                        bgcolor=ft.Colors.GREEN_700,
-                                        color=ft.Colors.WHITE
+                                        bgcolor=ft.colors.GREEN_700,
+                                        color=ft.colors.WHITE
                                     )
                                 ],
                                 spacing=10
@@ -240,7 +240,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                             ft.Container(
                                 content=macs_lista,
                                 padding=10,
-                                bgcolor=ft.Colors.GREY_900,
+                                bgcolor=ft.colors.GREY_900,
                                 border_radius=8
                             )
                         ]
@@ -257,12 +257,12 @@ def mostrar_admin_cuentas(page: ft.Page):
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.Colors.GREY_900,
+        bgcolor=ft.colors.GREY_900,
         title=ft.Text(
             "Administración de cuentas",
             size=24,
             weight="bold",
-            color=ft.Colors.WHITE
+            color=ft.colors.WHITE
         ),
         content=ft.Container(
             width=750,
@@ -275,7 +275,7 @@ def mostrar_admin_cuentas(page: ft.Page):
                 "Cerrar",
                 on_click=lambda e: cerrar(),
                 style=ft.ButtonStyle(
-                    color=ft.Colors.WHITE70
+                    color=ft.colors.WHITE70
                 )
             )
         ],

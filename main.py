@@ -35,7 +35,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     page.window_width = 1000
     page.window_height = 700
     page.padding = 20
-    page.bgcolor = ft.Colors.GREY_900
+    page.bgcolor = ft.colors.GREY_900
 
     # ------------------ DB INIT ------------------
 
@@ -43,7 +43,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     #     init_database()
     #     page.snack_bar = ft.SnackBar(
     #         content=ft.Text("Base de datos inicializada."),
-    #         bgcolor=ft.Colors.ORANGE
+    #         bgcolor=ft.colors.ORANGE
     #     )
     #     page.snack_bar.open = True
 
@@ -107,7 +107,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if not ventas_summary:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("No hay ventas para exportar"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
             page.snack_bar.open = True
             page.update()
@@ -118,7 +118,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Excel generado: {archivo}"),
-                bgcolor=ft.Colors.GREEN
+                bgcolor=ft.colors.GREEN
             )
             page.snack_bar.open = True
             page.update()
@@ -140,7 +140,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if not ventas_filtradas:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("No hay ventas para imprimir"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
             page.snack_bar.open = True
             page.update()
@@ -157,12 +157,12 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if ok:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Ticket de ventas impreso correctamente"),
-                bgcolor=ft.Colors.GREEN
+                bgcolor=ft.colors.GREEN
             )
         else:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Error al imprimir: {msg}"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
 
         page.snack_bar.open = True
@@ -174,7 +174,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
 
         page.snack_bar = ft.SnackBar(
             content=ft.Text(msg),
-            bgcolor=ft.Colors.GREEN if ok else ft.Colors.RED
+            bgcolor=ft.colors.GREEN if ok else ft.colors.RED
         )
         page.snack_bar.open = True
         page.update()
@@ -183,14 +183,14 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     # ------------------ CART ------------------
 
     cart_list = ft.Column(scroll=ft.ScrollMode.AUTO)
-    total_text = ft.Text("Total: $0", size=25, weight="bold", color=ft.Colors.WHITE)
+    total_text = ft.Text("Total: $0", size=25, weight="bold", color=ft.colors.WHITE)
 
 
     ultimo_total_text = ft.Text(
     "Última venta: $0",
     size=22,
     weight="bold",
-    color=ft.Colors.WHITE70
+    color=ft.colors.WHITE70
     )
 
     medio_pago_dropdown = ft.Dropdown(
@@ -218,17 +218,17 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                     controls=[
                         ft.Text(
                             f"{item['name']} - ${int(item['price'])}",
-                            color=ft.Colors.WHITE,
+                            color=ft.colors.WHITE,
                             size=18,
                             expand=True,
                         ),
                         ft.Container(
-                            bgcolor=ft.Colors.RED_700,
+                            bgcolor=ft.colors.RED_700,
                             border_radius=8,
                             padding=8,
                             content=ft.Text(
                                 "Eliminar",
-                                color=ft.Colors.WHITE,
+                                color=ft.colors.WHITE,
                                 size=16,
                                 weight="bold"
                             ),
@@ -267,7 +267,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if not cart:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("El carrito está vacío"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
             page.snack_bar.open = True
             page.update()
@@ -284,7 +284,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if not medio_pago_id:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Seleccione un medio de pago"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
             page.snack_bar.open = True
             page.update()
@@ -323,7 +323,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         if errores > 0:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Error en {errores} ticket(s)"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
         else:
             ultimo_total_text.value = f"Última venta: ${int(total_venta_actual):,}"
@@ -333,7 +333,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
 
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("Venta registrada correctamente"),
-                bgcolor=ft.Colors.GREEN
+                bgcolor=ft.colors.GREEN
             )
 
         page.snack_bar.open = True
@@ -398,7 +398,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
             width=180,
             height=180,
             border_radius=15,
-            bgcolor=ft.Colors.GREY_800,
+            bgcolor=ft.colors.GREY_800,
             on_click=lambda e: add_to_cart(product),
             content=ft.Stack(
                 controls=[
@@ -415,7 +415,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                                     product["name"],
                                     size=30,
                                     weight="bold",
-                                    color=ft.Colors.WHITE,
+                                    color=ft.colors.WHITE,
                                     text_align="center",
                                     max_lines=2,
                                     overflow=ft.TextOverflow.ELLIPSIS,
@@ -424,9 +424,9 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                                     f"Vendido: {product['cantidad_vendida']}",
                                     size=16,
                                     color=(
-                                        ft.Colors.RED_400
+                                        ft.colors.RED_400
                                         if product["cantidad_disponible"] <= 5
-                                        else ft.Colors.WHITE70
+                                        else ft.colors.WHITE70
                                     ),
                                 ),
                             ],
@@ -440,13 +440,13 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                         content=ft.Container(
                             padding=6,
                             width=140,
-                            bgcolor=ft.Colors.GREY_500,
+                            bgcolor=ft.colors.GREY_500,
                             border_radius=8,
                             content=ft.Text(
                                 f"${int(product['price'])}",
                                 size=20,
                                 weight="bold",
-                                color=ft.Colors.WHITE,
+                                color=ft.colors.WHITE,
                                 text_align="center",
                             ),
                         ),
@@ -465,37 +465,37 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         ft.ElevatedButton(
             "+ Agregar producto",
             on_click=open_add_product_dialog,
-            bgcolor=ft.Colors.GREY_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.GREY_700,
+            color=ft.colors.WHITE,
         ),
         ft.ElevatedButton(
             "Descargar Excel",
             on_click=descargar_excel_ventas,
-            bgcolor=ft.Colors.GREEN_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.GREEN_700,
+            color=ft.colors.WHITE,
         ),
         ft.ElevatedButton(
             "Ticket ventas",
             on_click=imprimir_ticket_ventas_totales, 
-            bgcolor=ft.Colors.BLUE_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.BLUE_700,
+            color=ft.colors.WHITE,
         ),
         ft.ElevatedButton(
             "Administrar productos",
             on_click=open_products_crud,
-            bgcolor=ft.Colors.ORANGE_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.ORANGE_700,
+            color=ft.colors.WHITE,
         ),
         ft.ElevatedButton(
             "Medios de pago",
-            bgcolor=ft.Colors.TEAL_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.TEAL_700,
+            color=ft.colors.WHITE,
             on_click=lambda e: mostrar_admin_medios_pago(page, refresh_medios_pago_dropdown)
         ),
         ft.ElevatedButton(
             "Cambiar caja",
-            bgcolor=ft.Colors.GREY_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.GREY_700,
+            color=ft.colors.WHITE,
             on_click=lambda e: popup_empresa(
                 page,
                 on_save_empresa,
@@ -504,8 +504,8 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         ),
         ft.ElevatedButton(
             "Corte de Caja",
-            bgcolor=ft.Colors.RED_700,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.colors.RED_700,
+            color=ft.colors.WHITE,
             on_click=lambda e: ejecutar_corte()
         ),
     ]
@@ -515,8 +515,8 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         botones_fila.append(
             ft.ElevatedButton(
                 "Administrar cuentas",
-                bgcolor=ft.Colors.PURPLE_700,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.colors.PURPLE_700,
+                color=ft.colors.WHITE,
                 on_click=lambda e: mostrar_admin_cuentas(page)
             )
         )
@@ -524,7 +524,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     left_panel = ft.Column(
         expand=True,
         controls=[
-            ft.Text("Productos", size=40, weight="bold", color=ft.Colors.WHITE),
+            ft.Text("Productos", size=40, weight="bold", color=ft.colors.WHITE),
             ft.Row(
                 spacing=10,
                 controls=botones_fila,
@@ -538,7 +538,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     right_panel = ft.Container(
         width=350,
         padding=10,
-        bgcolor=ft.Colors.GREY_800,
+        bgcolor=ft.colors.GREY_800,
         border_radius=10,
         content=ft.Column(
             expand=True,
@@ -548,7 +548,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                     "Venta actual",
                     size=22,
                     weight="bold",
-                    color=ft.Colors.WHITE
+                    color=ft.colors.WHITE
                 ),
 
                 # LISTA DE PRODUCTOS (SCROLL)
@@ -569,8 +569,8 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 ft.ElevatedButton(
                     "Imprimir ticket",
                     on_click=lambda e: finalize_venta(),
-                    bgcolor=ft.Colors.GREY_600,
-                    color=ft.Colors.WHITE,
+                    bgcolor=ft.colors.GREY_600,
+                    color=ft.colors.WHITE,
                     height=55,   # ← agranda el botón
                     style=ft.ButtonStyle(
                         text_style=ft.TextStyle(
