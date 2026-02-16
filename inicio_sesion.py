@@ -8,7 +8,7 @@ def mostrar_login(page: ft.Page, on_success):
     """
     mensaje = ft.Text(
         "",
-        color=ft.colors.RED_400,
+        color=ft.Colors.RED_400,
         size=13,
         text_align=ft.TextAlign.CENTER
     )
@@ -39,11 +39,11 @@ def mostrar_login(page: ft.Page, on_success):
         label="Usuario",
         autofocus=True,
         width=300,
-        bgcolor=ft.colors.GREY_700,
-        color=ft.colors.WHITE,
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
-        border_color=ft.colors.GREY_600,
-        focused_border_color=ft.colors.BLUE_400,
+        bgcolor=ft.Colors.GREY_700,
+        color=ft.Colors.WHITE,
+        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+        border_color=ft.Colors.GREY_600,
+        focused_border_color=ft.Colors.BLUE_400,
         text_align=ft.TextAlign.CENTER,
         on_submit=intentar_login
     )
@@ -52,22 +52,22 @@ def mostrar_login(page: ft.Page, on_success):
         label="Contraseña",
         password=True,
         width=300,
-        bgcolor=ft.colors.GREY_700,
-        color=ft.colors.WHITE,
-        label_style=ft.TextStyle(color=ft.colors.WHITE70),
-        border_color=ft.colors.GREY_600,
-        focused_border_color=ft.colors.BLUE_400,
+        bgcolor=ft.Colors.GREY_700,
+        color=ft.Colors.WHITE,
+        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+        border_color=ft.Colors.GREY_600,
+        focused_border_color=ft.Colors.BLUE_400,
         text_align=ft.TextAlign.CENTER,
         on_submit=intentar_login
     )
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.colors.GREY_800,
+        bgcolor=ft.Colors.GREY_800,
         title=ft.Container(
             content=ft.Text(
                 "Inicio de sesión",
-                color=ft.colors.WHITE,
+                color=ft.Colors.WHITE,
                 weight="bold",
                 size=24,
                 text_align=ft.TextAlign.CENTER
@@ -93,8 +93,8 @@ def mostrar_login(page: ft.Page, on_success):
                 content=ft.ElevatedButton(
                     "Ingresar",
                     on_click=intentar_login,
-                    bgcolor=ft.colors.GREEN_700,
-                    color=ft.colors.WHITE,
+                    bgcolor=ft.Colors.GREEN_700,
+                    color=ft.Colors.WHITE,
                     height=45,
                     width=200
                 ),

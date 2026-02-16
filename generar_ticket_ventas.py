@@ -1,8 +1,9 @@
 from datetime import datetime
+from collections import defaultdict
 
 # ===== COMANDOS ESC/POS =====
 
-FUENTE_GRANDE = "\x1d\x21\x21"      # Doble ancho + doble alto
+FUENTE_GRANDE = "\x1d\x21\x21"
 FUENTE_NORMAL = "\x1d\x21\x00"
 
 NEGRITA_ON = "\x1b\x45\x01"
@@ -15,11 +16,26 @@ LINEA = "=" * 48
 SEPARADOR = "-" * 48
 
 
-def generar_ticket_ventas_totales(empresa_nombre, ventas_summary):
+def generar_ticket_ventas_totales(empresa_nombre, rows_filtrados):
     """
-    Genera un ticket ESC/POS con el resumen de ventas totales
-    ventas_summary viene de get_ventas_summary()
+    rows_filtrados viene del dashboard.
+    Contiene:
+    id, total, nombre, cantidad, medio, corte_id
     """
+
+    if not rows_filtrados:
+        return "No hay datos para imprimir"
+
+    # Agrupar por producto
+    agrupado = defaultdict(lambda: {
+        "unidades": 0,
+        "total": 0
+    })
+
+    for row in rows_filtrados:
+        producto = row["nombre"]
+        agrupado[producto]["unidades"] += row["cantidad"]
+        agrupado[producto]["total"] += row["total"]
 
     total_general = 0
 
@@ -30,16 +46,16 @@ def generar_ticket_ventas_totales(empresa_nombre, ventas_summary):
         IZQUIERDA
     )
 
-    for v in ventas_summary:
-        if v["unidades_vendidas"] <= 0:
+    for producto, data in agrupado.items():
+        if data["unidades"] <= 0:
             continue
 
-        total_producto = v["ingresos_totales"]
+        total_producto = data["total"]
         total_general += total_producto
 
         ticket += (
-            NEGRITA_ON + v["nombre"] + NEGRITA_OFF + "\n" +
-            f"Cantidad: {v['unidades_vendidas']}\n" +
+            NEGRITA_ON + producto + NEGRITA_OFF + "\n" +
+            f"Cantidad: {data['unidades']}\n" +
             f"Total: ${int(total_producto):,}\n" +
             SEPARADOR + "\n"
         )

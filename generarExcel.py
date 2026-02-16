@@ -1,30 +1,39 @@
 import pandas as pd
+from collections import defaultdict
 from datetime import datetime
 
 
-def generar_excel_ventas(ventas_summary):
+def generar_excel_ventas(rows_filtrados):
     """
-    ventas_summary: lista de dicts con claves:
-    nombre, unidades_vendidas, ingresos_totales
+    rows_filtrados viene del dashboard.
+    Contiene:
+    id, total, nombre, cantidad, medio
     """
 
-    if not ventas_summary:
+    if not rows_filtrados:
         return None
+
+    agrupado = defaultdict(lambda: {
+        "unidades": 0,
+        "total": 0
+    })
+
+    # Agrupar por producto
+    for row in rows_filtrados:
+        producto = row["nombre"]
+        agrupado[producto]["unidades"] += row["cantidad"]
+        agrupado[producto]["total"] += row["total"]
 
     filas = []
     total_general = 0
 
-    for venta in ventas_summary:
-        if venta["unidades_vendidas"] > 0:
-            total = venta["ingresos_totales"]
-            total_general += total
-
-            filas.append({
-                "Producto": venta["nombre"],
-                "Unidades vendidas": venta["unidades_vendidas"],
-                "Stock": venta["stock_actual"],
-                "Total ($)": int(total)
-            })
+    for producto, data in agrupado.items():
+        filas.append({
+            "Producto": producto,
+            "Unidades vendidas": data["unidades"],
+            "Total ($)": int(data["total"])
+        })
+        total_general += data["total"]
 
     filas.append({
         "Producto": "TOTAL GENERAL",
@@ -34,9 +43,9 @@ def generar_excel_ventas(ventas_summary):
 
     df = pd.DataFrame(filas)
 
-    nombre_archivo = f"Ventas_Bomberos.xlsx"
+    fecha = datetime.now().strftime("%Y%m%d_%H%M")
+    nombre_archivo = f"Ventas_Filtradas_{fecha}.xlsx"
+
     df.to_excel(nombre_archivo, index=False)
 
     return nombre_archivo
-
-# Ejemplo de uso
