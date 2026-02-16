@@ -41,11 +41,11 @@ def mostrar_dashboard(page: ft.Page):
     # TARJETAS
     # ============================
 
-    total_text = ft.Text(size=28, weight="bold", color=ft.Colors.GREEN_400)
-    unidades_text = ft.Text(size=28, weight="bold", color=ft.Colors.BLUE_400)
-    cantidad_ventas_text = ft.Text(size=28, weight="bold", color=ft.Colors.ORANGE_400)
-    promedio_text = ft.Text(size=28, weight="bold", color=ft.Colors.PURPLE_400)
-    corte_text = ft.Text(size=20, weight="bold", color=ft.Colors.WHITE)
+    total_text = ft.Text(size=28, weight="bold", color=ft.colors.GREEN_400)
+    unidades_text = ft.Text(size=28, weight="bold", color=ft.colors.BLUE_400)
+    cantidad_ventas_text = ft.Text(size=28, weight="bold", color=ft.colors.ORANGE_400)
+    promedio_text = ft.Text(size=28, weight="bold", color=ft.colors.PURPLE_400)
+    corte_text = ft.Text(size=20, weight="bold", color=ft.colors.WHITE)
 
     # ============================
     # CONSULTA FILTRADA
@@ -136,7 +136,7 @@ def mostrar_dashboard(page: ft.Page):
         if archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Excel generado: {archivo}"),
-                bgcolor=ft.Colors.GREEN
+                bgcolor=ft.colors.GREEN
             )
             page.snack_bar.open = True
             page.update()
@@ -159,7 +159,7 @@ def mostrar_dashboard(page: ft.Page):
 
         page.snack_bar = ft.SnackBar(
             content=ft.Text("Resumen impreso" if ok else msg),
-            bgcolor=ft.Colors.GREEN if ok else ft.Colors.RED
+            bgcolor=ft.colors.GREEN if ok else ft.colors.RED
         )
         page.snack_bar.open = True
         page.update()
@@ -172,12 +172,12 @@ def mostrar_dashboard(page: ft.Page):
         if not archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("No hay datos para generar PDF"),
-                bgcolor=ft.Colors.RED
+                bgcolor=ft.colors.RED
             )
         else:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("PDF generado correctamente"),
-                bgcolor=ft.Colors.GREEN
+                bgcolor=ft.colors.GREEN
             )
 
             try:
@@ -227,11 +227,11 @@ def mostrar_dashboard(page: ft.Page):
     def tarjeta(titulo, contenido):
         return ft.Container(
             padding=20,
-            bgcolor=ft.Colors.GREY_800,
+            bgcolor=ft.colors.GREY_800,
             border_radius=12,
             content=ft.Column(
                 controls=[
-                    ft.Text(titulo, color=ft.Colors.WHITE70),
+                    ft.Text(titulo, color=ft.colors.WHITE70),
                     contenido
                 ]
             )
@@ -257,20 +257,20 @@ def mostrar_dashboard(page: ft.Page):
         controls=[
             ft.ElevatedButton(
                 "Exportar Excel",
-                bgcolor=ft.Colors.GREEN_700,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.colors.GREEN_700,
+                color=ft.colors.WHITE,
                 on_click=lambda e: exportar_excel()
             ),
             ft.ElevatedButton(
                 "Imprimir resumen",
-                bgcolor=ft.Colors.ORANGE_700,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.colors.ORANGE_700,
+                color=ft.colors.WHITE,
                 on_click=lambda e: imprimir_resumen()
             ),
             ft.ElevatedButton(
                 "Generar PDF",
-                bgcolor=ft.Colors.PURPLE_700,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.colors.PURPLE_700,
+                color=ft.colors.WHITE,
                 on_click=lambda e: generar_pdf()
             ),
         ]
@@ -288,10 +288,10 @@ def mostrar_dashboard(page: ft.Page):
                 "Dashboard de Ventas",
                 size=30,
                 weight="bold",
-                color=ft.Colors.WHITE
+                color=ft.colors.WHITE
             ),
 
-            ft.Divider(color=ft.Colors.GREY_700),
+            ft.Divider(color=ft.colors.GREY_700),
 
             ft.Row(
                 spacing=20,
@@ -302,11 +302,11 @@ def mostrar_dashboard(page: ft.Page):
                 ]
             ),
 
-            ft.Divider(color=ft.Colors.GREY_700),
+            ft.Divider(color=ft.colors.GREY_700),
 
             tarjetas_row,
 
-            ft.Divider(color=ft.Colors.GREY_700),
+            ft.Divider(color=ft.colors.GREY_700),
 
             botones
         ]
@@ -314,7 +314,7 @@ def mostrar_dashboard(page: ft.Page):
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.Colors.GREY_900,
+        bgcolor=ft.colors.GREY_900,
         content=ft.Container(
             width=1100,
             height=650,
@@ -325,7 +325,7 @@ def mostrar_dashboard(page: ft.Page):
             ft.TextButton(
                 "Cerrar",
                 on_click=lambda e: cerrar(),
-                style=ft.ButtonStyle(color=ft.Colors.WHITE70)
+                style=ft.ButtonStyle(color=ft.colors.WHITE70)
             )
         ]
     )
