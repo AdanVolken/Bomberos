@@ -37,6 +37,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
     page.window_height = 700
     page.padding = 20
     page.bgcolor = ft.colors.GREY_900
+    page.window.icon = "ticketIcono.ico"
 
     # ------------------ DB INIT ------------------
 
