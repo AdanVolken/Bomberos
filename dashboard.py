@@ -201,7 +201,7 @@ def mostrar_dashboard(page: ft.Page):
     # DROPDOWNS
     # ============================
 
-    estilo_dropdown = ft.TextStyle(color=ft.Colors.GREY_300)
+    estilo_dropdown = ft.TextStyle(color=ft.colors.GREY_300)
 
     producto_dropdown = ft.Dropdown(
         label="Producto",
@@ -211,7 +211,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(p) for p in productos],
-        on_change=cambiar_producto
+        on_select=cambiar_producto
     )
 
     medio_dropdown = ft.Dropdown(
@@ -222,7 +222,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(m["nombre"]) for m in medios],
-        on_change=cambiar_medio
+        on_select=cambiar_medio
     )
 
     corte_dropdown = ft.Dropdown(
@@ -233,7 +233,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(c) for c in cortes],
-        on_change=cambiar_corte
+        on_select=cambiar_corte
     )
 
     # ============================
