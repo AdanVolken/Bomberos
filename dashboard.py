@@ -106,7 +106,8 @@ def mostrar_dashboard(page: ft.Page):
                 query += " WHERE " + " AND ".join(condiciones)
 
             cursor.execute(query, valores)
-            rows = cursor.fetchall()
+            # Convertir a dict para que .get() funcione en los generadores de reportes
+            rows = [dict(r) for r in cursor.fetchall()]
             conn.close()
             return rows
         except Exception as e:
