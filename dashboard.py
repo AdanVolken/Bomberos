@@ -12,22 +12,43 @@ from printer import imprimir_ticket
 
 def mostrar_dashboard(page: ft.Page):
 
-    conn = get_connection()
-    cursor = conn.cursor()
-
     # ============================
-    # LISTAS PARA FILTROS
+    # LISTAS PARA FILTROS (con manejo de errores si faltan tablas)
     # ============================
 
-    cursor.execute("SELECT id FROM cortes_caja ORDER BY id DESC")
-    cortes = [str(r["id"]) for r in cursor.fetchall()]
+    cortes = []
+    productos = []
+    medios = []
+    conn = None
 
-    cursor.execute("SELECT nombre FROM productos ORDER BY nombre")
-    productos = [r["nombre"] for r in cursor.fetchall()]
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    medios = get_medios_pago()
+        try:
+            cursor.execute("SELECT id FROM cortes_caja ORDER BY id DESC")
+            cortes = [str(r["id"]) for r in cursor.fetchall()]
+        except Exception:
+            cortes = []
 
-    conn.close()
+        try:
+            cursor.execute("SELECT nombre FROM productos ORDER BY nombre")
+            productos = [r["nombre"] for r in cursor.fetchall()]
+        except Exception:
+            productos = []
+
+        try:
+            medios = get_medios_pago()
+        except Exception:
+            medios = []
+    except Exception as e:
+        print(f"[Dashboard] Error al cargar filtros: {e}")
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     # ============================
     # ESTADO FILTROS
@@ -52,43 +73,49 @@ def mostrar_dashboard(page: ft.Page):
     # ============================
 
     def obtener_datos_filtrados():
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        conn = get_connection()
-        cursor = conn.cursor()
+            query = """
+            SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
+                   (d.cantidad * d.precio_unitario) as subtotal,
+                   m.nombre as medio
+            FROM ventas v
+            JOIN ventas_detalle d ON v.id = d.venta_id
+            JOIN productos p ON d.producto_id = p.id
+            JOIN medios_pago m ON v.medio_pago_id = m.id
+            """
 
-        query = """
-        SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
-               (d.cantidad * d.precio_unitario) as subtotal,
-               m.nombre as medio
-        FROM ventas v
-        JOIN ventas_detalle d ON v.id = d.venta_id
-        JOIN productos p ON d.producto_id = p.id
-        JOIN medios_pago m ON v.medio_pago_id = m.id
-        """
+            condiciones = []
+            valores = []
 
-        condiciones = []
-        valores = []
+            if filtro_producto != "Todos":
+                condiciones.append("p.nombre = ?")
+                valores.append(filtro_producto)
 
-        if filtro_producto != "Todos":
-            condiciones.append("p.nombre = ?")
-            valores.append(filtro_producto)
+            if filtro_medio != "Todos":
+                condiciones.append("m.nombre = ?")
+                valores.append(filtro_medio)
 
-        if filtro_medio != "Todos":
-            condiciones.append("m.nombre = ?")
-            valores.append(filtro_medio)
+            if filtro_corte != "Todos":
+                condiciones.append("v.corte_id = ?")
+                valores.append(int(filtro_corte))
 
-        if filtro_corte != "Todos":
-            condiciones.append("v.corte_id = ?")
-            valores.append(int(filtro_corte))
+            if condiciones:
+                query += " WHERE " + " AND ".join(condiciones)
 
-        if condiciones:
-            query += " WHERE " + " AND ".join(condiciones)
-
-        cursor.execute(query, valores)
-        rows = cursor.fetchall()
-        conn.close()
-
-        return rows
+            cursor.execute(query, valores)
+            rows = cursor.fetchall()
+            conn.close()
+            return rows
+        except Exception as e:
+            print(f"[Dashboard] Error en obtener_datos_filtrados: {e}")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return []
 
     # ============================
     # RECALCULAR TARJETAS
