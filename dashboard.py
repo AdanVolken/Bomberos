@@ -238,7 +238,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(p) for p in productos],
-        on_select=cambiar_producto
+        on_click=cambiar_producto
     )
 
     medio_dropdown = ft.Dropdown(
@@ -249,7 +249,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(m["nombre"]) for m in medios],
-        on_select=cambiar_medio
+        on_click=cambiar_medio
     )
 
     corte_dropdown = ft.Dropdown(
@@ -260,7 +260,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(c) for c in cortes],
-        on_select=cambiar_corte
+        on_click=cambiar_corte
     )
 
     # ============================
