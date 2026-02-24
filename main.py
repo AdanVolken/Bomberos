@@ -150,7 +150,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
 
         # Generamos el texto del ticket
         texto_ticket = generar_ticket_ventas_totales(
-            "Bomberos Voluntarios de Humboldt",
+            "Resumen de ventas",
             ventas_filtradas
         )
 
@@ -469,40 +469,66 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
             on_click=open_add_product_dialog,
             bgcolor=ft.colors.GREY_700,
             color=ft.colors.WHITE,
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
         ft.ElevatedButton(
             "Administrar productos",
             on_click=open_products_crud,
             bgcolor=ft.colors.ORANGE_700,
             color=ft.colors.WHITE,
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
         ft.ElevatedButton(
             "Medios de pago",
             bgcolor=ft.colors.TEAL_700,
             color=ft.colors.WHITE,
-            on_click=lambda e: mostrar_admin_medios_pago(page, refresh_medios_pago_dropdown)
+            on_click=lambda e: mostrar_admin_medios_pago(page, refresh_medios_pago_dropdown),
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
         ft.ElevatedButton(
             "Corte de Caja",
             bgcolor=ft.colors.RED_700,
             color=ft.colors.WHITE,
-            on_click=lambda e: ejecutar_corte()
+            on_click=lambda e: ejecutar_corte(),
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
         ft.ElevatedButton(
             "Cambiar caja",
             bgcolor=ft.colors.GREY_700,
             color=ft.colors.WHITE,
-            on_click=lambda e: popup_empresa(
-                page,
-                on_save_empresa,
-                empresa
-            )
+            on_click=lambda e: popup_empresa(page, on_save_empresa, empresa),
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
         ft.ElevatedButton(
             "Dashboard ventas",
             on_click=lambda e: mostrar_dashboard(page),
             bgcolor=ft.colors.GREEN_700,
             color=ft.colors.WHITE,
+            height=36,
+            style=ft.ButtonStyle(
+                padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                text_style=ft.TextStyle(size=13)
+            ),
         ),
     ]
     
