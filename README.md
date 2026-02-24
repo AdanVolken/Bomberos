@@ -76,7 +76,7 @@ python main.py
 
 La base de datos se guarda en:
 
-- **Windows**: `%APPDATA%\MiniPOS\Sistema_Tickets_DB.db`
+- **Windows**: `%APPDATA%\SistemaTicket\Sistema_Tickets_DB.db`
 - Si no existe, se crean las tablas automáticamente al importar el módulo `database`.
 
 ---
@@ -86,20 +86,20 @@ La base de datos se guarda en:
 Para crear un ejecutable portable con PyInstaller (Windows):
 
 ```bash
-pyinstaller --onefile --windowed --name MiniPOS --icon=ticketIcono.ico --add-data "Sistema_Tickets_DB.db;." --add-data "create_tables.sql;." main.py
+pyinstaller --onefile --windowed --name SistemaTicket --icon=ticketIcono.ico --add-data "Sistema_Tickets_DB.db;." --add-data "create_tables.sql;." main.py
 ```
 
 - `--onefile`: un solo .exe.
 - `--windowed`: sin consola.
-- `--name MiniPOS`: nombre del ejecutable.
+- `--name SistemaTicket`: nombre del ejecutable.
 - `--icon=ticketIcono.ico`: icono de la aplicación (debe existir en la raíz).
 - `--add-data`: incluye la base de datos y el SQL en el ejecutable (en Windows se usa `;` como separador).
 
-El .exe se genera en `dist/MiniPOS.exe`. La primera vez que se ejecute, creará/usa la base de datos en `%APPDATA%\MiniPOS\`.
+El .exe se genera en `dist/SistemaTicket.exe`. La primera vez que se ejecute, creará/usa la base de datos en `%APPDATA%\SistemaTicket\`.
 
 **En Linux/macOS** el separador de `--add-data` es `:`:
 ```bash
-pyinstaller --onefile --windowed --name MiniPOS --icon=ticketIcono.ico --add-data "Sistema_Tickets_DB.db:." --add-data "create_tables.sql:." main.py
+pyinstaller --onefile --windowed --name SistemaTicket --icon=ticketIcono.ico --add-data "Sistema_Tickets_DB.db:." --add-data "create_tables.sql:." main.py
 ```
 
 ---
@@ -108,7 +108,7 @@ pyinstaller --onefile --windowed --name MiniPOS --icon=ticketIcono.ico --add-dat
 
 En la siguiente carpeta de Google Drive están disponibles el **ejecutable** de Mini POS y el **instalador de los drivers** para las impresoras térmicas:
 
-**[📁 Mini POS — Ejecutable y drivers de impresoras](https://drive.google.com/drive/folders/1OHRksN_aXonEG_mwtj2adKUWr0MGXkAo)**
+**[📁 Sistema Ticket — Ejecutable y drivers de impresoras](https://drive.google.com/drive/folders/1OHRksN_aXonEG_mwtj2adKUWr0MGXkAo)**
 
 - Descargar e instalar los drivers antes de usar la impresión de tickets.
 - El .exe puede ejecutarse sin instalar Python en el equipo.
@@ -134,7 +134,7 @@ En la siguiente carpeta de Google Drive están disponibles el **ejecutable** de 
 | `generar_pdf_ventas.py`  | Generación de PDF de resumen de ventas. |
 | `generar_ticket_ventas_totales` | Texto del ticket de resumen de ventas. |
 | `create_tables.sql`      | Definición de tablas (referencia; la app crea tablas desde `database.py`). |
-| `Sistema_Tickets_DB.db`  | Base SQLite (opcional en desarrollo; en producción puede generarse en `%APPDATA%\MiniPOS\`). |
+| `Sistema_Tickets_DB.db`  | Base SQLite (opcional en desarrollo; en producción puede generarse en `%APPDATA%\SistemaTicket\`). |
 | `requirements.txt`      | Dependencias Python. |
 
 ---
@@ -158,7 +158,7 @@ La aplicación crea y actualiza tablas automáticamente al iniciar (incluyendo m
 
 ## Uso rápido
 
-1. Ejecutar `python main.py` (o `dist/MiniPOS.exe` si usas el .exe).
+1. Ejecutar `python main.py` (o `dist/SistemaTicket.exe` si usas el .exe).
 2. Iniciar sesión:
    - **Admin**: usuario `admin`, contraseña `daleboca`.
    - **Otros**: usuario y contraseña de una licencia en la base de datos (se valida MAC y cupo de máquinas).
