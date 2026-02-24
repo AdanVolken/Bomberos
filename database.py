@@ -155,6 +155,16 @@ def crear_tablas_si_no_existen():
             VALUES (1, 'Efectivo', 1)
         """)
 
+        # ==================== CORTES DE CAJA (antes que ventas por FK) ====================
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cortes_caja (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_hora TEXT NOT NULL,
+                total_acumulado REAL NOT NULL,
+                ultima_venta_id INTEGER NOT NULL
+            )
+        """)
+
         # ==================== VENTAS ====================
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS ventas (
@@ -178,16 +188,6 @@ def crear_tablas_si_no_existen():
                 precio_unitario REAL NOT NULL,
                 FOREIGN KEY (venta_id) REFERENCES ventas(id),
                 FOREIGN KEY (producto_id) REFERENCES productos(id)
-            )
-        """)
-
-        # ==================== CORTES DE CAJA ====================
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS cortes_caja (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha_hora TEXT NOT NULL,
-                total_acumulado REAL NOT NULL,
-                ultima_venta_id INTEGER NOT NULL
             )
         """)
 

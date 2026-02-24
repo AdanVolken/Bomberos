@@ -12,22 +12,43 @@ from printer import imprimir_ticket
 
 def mostrar_dashboard(page: ft.Page):
 
-    conn = get_connection()
-    cursor = conn.cursor()
-
     # ============================
-    # LISTAS PARA FILTROS
+    # LISTAS PARA FILTROS (con manejo de errores si faltan tablas)
     # ============================
 
-    cursor.execute("SELECT id FROM cortes_caja ORDER BY id DESC")
-    cortes = [str(r["id"]) for r in cursor.fetchall()]
+    cortes = []
+    productos = []
+    medios = []
+    conn = None
 
-    cursor.execute("SELECT nombre FROM productos ORDER BY nombre")
-    productos = [r["nombre"] for r in cursor.fetchall()]
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
 
-    medios = get_medios_pago()
+        try:
+            cursor.execute("SELECT id FROM cortes_caja ORDER BY id DESC")
+            cortes = [str(r["id"]) for r in cursor.fetchall()]
+        except Exception:
+            cortes = []
 
-    conn.close()
+        try:
+            cursor.execute("SELECT nombre FROM productos ORDER BY nombre")
+            productos = [r["nombre"] for r in cursor.fetchall()]
+        except Exception:
+            productos = []
+
+        try:
+            medios = get_medios_pago()
+        except Exception:
+            medios = []
+    except Exception as e:
+        print(f"[Dashboard] Error al cargar filtros: {e}")
+    finally:
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
     # ============================
     # ESTADO FILTROS
@@ -41,54 +62,60 @@ def mostrar_dashboard(page: ft.Page):
     # TARJETAS
     # ============================
 
-    total_text = ft.Text(size=28, weight="bold", color=ft.colors.GREEN_400)
-    unidades_text = ft.Text(size=28, weight="bold", color=ft.colors.BLUE_400)
-    cantidad_ventas_text = ft.Text(size=28, weight="bold", color=ft.colors.ORANGE_400)
-    promedio_text = ft.Text(size=28, weight="bold", color=ft.colors.PURPLE_400)
-    corte_text = ft.Text(size=20, weight="bold", color=ft.colors.WHITE)
+    total_text = ft.Text(size=28, weight="bold", color=ft.Colors.GREEN_400)
+    unidades_text = ft.Text(size=28, weight="bold", color=ft.Colors.BLUE_400)
+    cantidad_ventas_text = ft.Text(size=28, weight="bold", color=ft.Colors.ORANGE_400)
+    promedio_text = ft.Text(size=28, weight="bold", color=ft.Colors.PURPLE_400)
+    corte_text = ft.Text(size=20, weight="bold", color=ft.Colors.WHITE)
 
     # ============================
     # CONSULTA FILTRADA
     # ============================
 
     def obtener_datos_filtrados():
+        try:
+            conn = get_connection()
+            cursor = conn.cursor()
 
-        conn = get_connection()
-        cursor = conn.cursor()
+            query = """
+            SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
+                   (d.cantidad * d.precio_unitario) as subtotal,
+                   m.nombre as medio
+            FROM ventas v
+            JOIN ventas_detalle d ON v.id = d.venta_id
+            JOIN productos p ON d.producto_id = p.id
+            JOIN medios_pago m ON v.medio_pago_id = m.id
+            """
 
-        query = """
-        SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
-               (d.cantidad * d.precio_unitario) as subtotal,
-               m.nombre as medio
-        FROM ventas v
-        JOIN ventas_detalle d ON v.id = d.venta_id
-        JOIN productos p ON d.producto_id = p.id
-        JOIN medios_pago m ON v.medio_pago_id = m.id
-        """
+            condiciones = []
+            valores = []
 
-        condiciones = []
-        valores = []
+            if filtro_producto != "Todos":
+                condiciones.append("p.nombre = ?")
+                valores.append(filtro_producto)
 
-        if filtro_producto != "Todos":
-            condiciones.append("p.nombre = ?")
-            valores.append(filtro_producto)
+            if filtro_medio != "Todos":
+                condiciones.append("m.nombre = ?")
+                valores.append(filtro_medio)
 
-        if filtro_medio != "Todos":
-            condiciones.append("m.nombre = ?")
-            valores.append(filtro_medio)
+            if filtro_corte != "Todos":
+                condiciones.append("v.corte_id = ?")
+                valores.append(int(filtro_corte))
 
-        if filtro_corte != "Todos":
-            condiciones.append("v.corte_id = ?")
-            valores.append(int(filtro_corte))
+            if condiciones:
+                query += " WHERE " + " AND ".join(condiciones)
 
-        if condiciones:
-            query += " WHERE " + " AND ".join(condiciones)
-
-        cursor.execute(query, valores)
-        rows = cursor.fetchall()
-        conn.close()
-
-        return rows
+            cursor.execute(query, valores)
+            rows = cursor.fetchall()
+            conn.close()
+            return rows
+        except Exception as e:
+            print(f"[Dashboard] Error en obtener_datos_filtrados: {e}")
+            try:
+                conn.close()
+            except Exception:
+                pass
+            return []
 
     # ============================
     # RECALCULAR TARJETAS
@@ -144,7 +171,7 @@ def mostrar_dashboard(page: ft.Page):
         if archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text(f"Excel generado: {archivo}"),
-                bgcolor=ft.colors.GREEN
+                bgcolor=ft.Colors.GREEN
             )
             page.snack_bar.open = True
             page.update()
@@ -167,7 +194,7 @@ def mostrar_dashboard(page: ft.Page):
 
         page.snack_bar = ft.SnackBar(
             content=ft.Text("Resumen impreso" if ok else msg),
-            bgcolor=ft.colors.GREEN if ok else ft.colors.RED
+            bgcolor=ft.Colors.GREEN if ok else ft.Colors.RED
         )
         page.snack_bar.open = True
         page.update()
@@ -180,12 +207,12 @@ def mostrar_dashboard(page: ft.Page):
         if not archivo:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("No hay datos para generar PDF"),
-                bgcolor=ft.colors.RED
+                bgcolor=ft.Colors.RED
             )
         else:
             page.snack_bar = ft.SnackBar(
                 content=ft.Text("PDF generado correctamente"),
-                bgcolor=ft.colors.GREEN
+                bgcolor=ft.Colors.GREEN
             )
 
             try:
@@ -211,7 +238,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(p) for p in productos],
-        on_change=cambiar_producto
+        on_select=cambiar_producto
     )
 
     medio_dropdown = ft.Dropdown(
@@ -222,7 +249,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(m["nombre"]) for m in medios],
-        on_change=cambiar_medio
+        on_select=cambiar_medio
     )
 
     corte_dropdown = ft.Dropdown(
@@ -233,7 +260,7 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(c) for c in cortes],
-        on_change=cambiar_corte
+        on_select=cambiar_corte
     )
 
     # ============================
@@ -243,11 +270,11 @@ def mostrar_dashboard(page: ft.Page):
     def tarjeta(titulo, contenido):
         return ft.Container(
             padding=20,
-            bgcolor=ft.colors.GREY_800,
+            bgcolor=ft.Colors.GREY_800,
             border_radius=12,
             content=ft.Column(
                 controls=[
-                    ft.Text(titulo, color=ft.colors.WHITE70),
+                    ft.Text(titulo, color=ft.Colors.WHITE70),
                     contenido
                 ]
             )
@@ -273,20 +300,20 @@ def mostrar_dashboard(page: ft.Page):
         controls=[
             ft.ElevatedButton(
                 "Exportar Excel",
-                bgcolor=ft.colors.GREEN_700,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.GREEN_700,
+                color=ft.Colors.WHITE,
                 on_click=lambda e: exportar_excel()
             ),
             ft.ElevatedButton(
                 "Imprimir resumen",
-                bgcolor=ft.colors.ORANGE_700,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.ORANGE_700,
+                color=ft.Colors.WHITE,
                 on_click=lambda e: imprimir_resumen()
             ),
             ft.ElevatedButton(
                 "Generar PDF",
-                bgcolor=ft.colors.PURPLE_700,
-                color=ft.colors.WHITE,
+                bgcolor=ft.Colors.PURPLE_700,
+                color=ft.Colors.WHITE,
                 on_click=lambda e: generar_pdf()
             ),
         ]
@@ -304,10 +331,10 @@ def mostrar_dashboard(page: ft.Page):
                 "Dashboard de Ventas",
                 size=30,
                 weight="bold",
-                color=ft.colors.WHITE
+                color=ft.Colors.WHITE
             ),
 
-            ft.Divider(color=ft.colors.GREY_700),
+            ft.Divider(color=ft.Colors.GREY_700),
 
             ft.Row(
                 spacing=20,
@@ -318,11 +345,11 @@ def mostrar_dashboard(page: ft.Page):
                 ]
             ),
 
-            ft.Divider(color=ft.colors.GREY_700),
+            ft.Divider(color=ft.Colors.GREY_700),
 
             tarjetas_row,
 
-            ft.Divider(color=ft.colors.GREY_700),
+            ft.Divider(color=ft.Colors.GREY_700),
 
             botones
         ]
@@ -330,7 +357,7 @@ def mostrar_dashboard(page: ft.Page):
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.colors.GREY_900,
+        bgcolor=ft.Colors.GREY_900,
         content=ft.Container(
             width=1100,
             height=650,
@@ -341,7 +368,7 @@ def mostrar_dashboard(page: ft.Page):
             ft.TextButton(
                 "Cerrar",
                 on_click=lambda e: cerrar(),
-                style=ft.ButtonStyle(color=ft.colors.WHITE70)
+                style=ft.ButtonStyle(color=ft.Colors.WHITE70)
             )
         ]
     )

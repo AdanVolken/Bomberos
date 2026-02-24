@@ -17,12 +17,12 @@ def products_crud_dialog(page, on_refresh):
             products_list.controls.append(
                 ft.Container(
                     padding=10,
-                    bgcolor=ft.colors.GREY_700,
+                    bgcolor=ft.Colors.GREY_700,
                     border_radius=8,
                     content=ft.Row(
                         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                         controls=[
-                            ft.Text(p["name"], color=ft.colors.WHITE),
+                            ft.Text(p["name"], color=ft.Colors.WHITE),
                             ft.Row(
                                 controls=[
                                     ft.IconButton(
@@ -31,7 +31,7 @@ def products_crud_dialog(page, on_refresh):
                                     ),
                                     ft.IconButton(
                                         icon=ft.icons.DELETE,
-                                        icon_color=ft.colors.RED,
+                                        icon_color=ft.Colors.RED,
                                         on_click=lambda e, pid=p["id"]: delete(pid)
                                     ),
                                 ]
