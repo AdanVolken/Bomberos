@@ -23,12 +23,15 @@ def generar_pdf_ventas(rows_filtrados, nombre_archivo="Resumen_Ventas.pdf"):
 
     for row in rows_filtrados:
         producto = row["nombre"]
+        subtotal = row.get("subtotal") or (row["cantidad"] * row.get("precio_unitario", 0))
         agrupado[producto]["unidades"] += row["cantidad"]
-        agrupado[producto]["total"] += row["total"]
+        agrupado[producto]["total"] += subtotal
 
     total_general = sum(data["total"] for data in agrupado.values())
     total_unidades = sum(data["unidades"] for data in agrupado.values())
-    cantidad_ventas = len(rows_filtrados)
+    # Cantidad de ventas = ventas únicas (mismo id puede repetirse por cada línea)
+    ids_ventas = set(r["id"] for r in rows_filtrados)
+    cantidad_ventas = len(ids_ventas)
     promedio = total_general / cantidad_ventas if cantidad_ventas else 0
 
     doc = SimpleDocTemplate(nombre_archivo, pagesize=A4)

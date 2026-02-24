@@ -34,8 +34,9 @@ def generar_ticket_ventas_totales(empresa_nombre, rows_filtrados):
 
     for row in rows_filtrados:
         producto = row["nombre"]
+        subtotal = row.get("subtotal") or (row["cantidad"] * row.get("precio_unitario", 0))
         agrupado[producto]["unidades"] += row["cantidad"]
-        agrupado[producto]["total"] += row["total"]
+        agrupado[producto]["total"] += subtotal
 
     total_general = 0
 

@@ -57,7 +57,9 @@ def mostrar_dashboard(page: ft.Page):
         cursor = conn.cursor()
 
         query = """
-        SELECT v.id, v.total, p.nombre, d.cantidad, m.nombre as medio
+        SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
+               (d.cantidad * d.precio_unitario) as subtotal,
+               m.nombre as medio
         FROM ventas v
         JOIN ventas_detalle d ON v.id = d.venta_id
         JOIN productos p ON d.producto_id = p.id
@@ -96,10 +98,16 @@ def mostrar_dashboard(page: ft.Page):
 
         rows = obtener_datos_filtrados()
 
-        total = sum(r["total"] for r in rows)
-        unidades = sum(r["cantidad"] for r in rows)
-        cantidad_ventas = len(set(r["id"] for r in rows))
+        # Total: sumar el total de cada venta una sola vez (cada venta tiene varias filas por detalle)
+        totales_por_venta = {}
+        for r in rows:
+            vid = r["id"]
+            if vid not in totales_por_venta:
+                totales_por_venta[vid] = r["total"]
+        total = sum(totales_por_venta.values())
 
+        unidades = sum(r["cantidad"] for r in rows)
+        cantidad_ventas = len(totales_por_venta)
         promedio = total / cantidad_ventas if cantidad_ventas > 0 else 0
 
         total_text.value = f"${int(total):,}"
@@ -193,10 +201,14 @@ def mostrar_dashboard(page: ft.Page):
     # DROPDOWNS
     # ============================
 
+    estilo_dropdown = ft.TextStyle(color=ft.Colors.GREY_300)
+
     producto_dropdown = ft.Dropdown(
         label="Producto",
         width=200,
         value="Todos",
+        text_style=estilo_dropdown,
+        label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(p) for p in productos],
         on_change=cambiar_producto
@@ -206,6 +218,8 @@ def mostrar_dashboard(page: ft.Page):
         label="Medio de pago",
         width=200,
         value="Todos",
+        text_style=estilo_dropdown,
+        label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(m["nombre"]) for m in medios],
         on_change=cambiar_medio
@@ -215,6 +229,8 @@ def mostrar_dashboard(page: ft.Page):
         label="Corte de caja",
         width=200,
         value="Todos",
+        text_style=estilo_dropdown,
+        label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(c) for c in cortes],
         on_change=cambiar_corte

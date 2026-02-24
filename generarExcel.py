@@ -18,11 +18,12 @@ def generar_excel_ventas(rows_filtrados):
         "total": 0
     })
 
-    # Agrupar por producto
+    # Agrupar por producto (subtotal = cantidad * precio_unitario por línea)
     for row in rows_filtrados:
         producto = row["nombre"]
+        subtotal = row.get("subtotal") or (row["cantidad"] * row.get("precio_unitario", 0))
         agrupado[producto]["unidades"] += row["cantidad"]
-        agrupado[producto]["total"] += row["total"]
+        agrupado[producto]["total"] += subtotal
 
     filas = []
     total_general = 0
