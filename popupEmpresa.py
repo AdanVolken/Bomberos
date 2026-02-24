@@ -18,21 +18,21 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
     empresa_input = ft.TextField(
         label="Nombre de la empresa",
         autofocus=True,
-        bgcolor=ft.Colors.GREY_700,
-        color=ft.Colors.WHITE,
-        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE,
+        label_style=ft.TextStyle(color=ft.colors.WHITE70),
     )
 
     caja_input = ft.TextField(
         label="Nombre de la caja",
-        bgcolor=ft.Colors.GREY_700,
-        color=ft.Colors.WHITE,
-        label_style=ft.TextStyle(color=ft.Colors.WHITE70),
+        bgcolor=ft.colors.GREY_700,
+        color=ft.colors.WHITE,
+        label_style=ft.TextStyle(color=ft.colors.WHITE70),
     )
 
     error_text = ft.Text(
         "",
-        color=ft.Colors.RED_400,
+        color=ft.colors.RED_400,
         size=14
     )
 
@@ -56,10 +56,10 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
 
     dialog = ft.AlertDialog(
         modal=True,
-        bgcolor=ft.Colors.GREY_800,
+        bgcolor=ft.colors.GREY_800,
         title=ft.Text(
             "Configuración inicial",
-            color=ft.Colors.WHITE,
+            color=ft.colors.WHITE,
             weight="bold",
             size=20
         ),
@@ -69,7 +69,7 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
             controls=[
                 ft.Text(
                     "Antes de comenzar, configurá la empresa y la caja",
-                    color=ft.Colors.WHITE70,
+                    color=ft.colors.WHITE70,
                     size=14
                 ),
                 empresa_input,
@@ -82,14 +82,14 @@ def popup_empresa(page: ft.Page, on_save, empresa_actual=None):
                 "Cerrar",
                 on_click=cerrar,
                 style=ft.ButtonStyle(
-                    color=ft.Colors.WHITE70
+                    color=ft.colors.WHITE70
                 )
             ),
             ft.ElevatedButton(
                 "Guardar",
                 on_click=guardar,
-                bgcolor=ft.Colors.GREEN_700,
-                color=ft.Colors.WHITE,
+                bgcolor=ft.colors.GREEN_700,
+                color=ft.colors.WHITE,
                 height=45
             )
         ],
