@@ -647,7 +647,7 @@ def obtener_ultimo_corte():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, fecha_hora
+        SELECT id, fecha_hora, ultima_venta_id
         FROM cortes_caja
         ORDER BY id DESC
         LIMIT 1
