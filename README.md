@@ -1,6 +1,6 @@
-# Mini POS — Sistema de Punto de Venta
+# Sistema de Tickets
 
-Sistema de punto de venta (POS) desarrollado en Python con interfaz gráfica en Flet. Incluye autenticación offline, control de licencias por máquina, ventas, impresión de tickets, cortes de caja y dashboard de ventas.
+Sistema de punto de venta desarrollado en Python con interfaz gráfica en Flet. Incluye autenticación offline, control de licencias por máquina, ventas, impresión de tickets, cortes de caja y dashboard de ventas.
 
 ---
 
