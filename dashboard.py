@@ -211,7 +211,7 @@ def mostrar_dashboard(page: ft.Page):
         nombre_empresa = (empresa.get("nombre") or "Mi Empresa").strip() or "Mi Empresa"
 
         texto = generar_ticket_ventas_totales(
-            "Bomberos Voluntarios de Humboldt",
+            "Sistema de Ventas - Resumen",
             rows
         )
 
