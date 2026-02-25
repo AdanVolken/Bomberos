@@ -5,9 +5,10 @@ from datetime import datetime
 
 def generar_excel_ventas(rows_filtrados):
     """
-    rows_filtrados viene del dashboard.
-    Contiene:
-    id, total, nombre, cantidad, medio
+    rows_filtrados viene del dashboard o de get_ventas_summary().
+    Soporta dos formatos:
+      - Formato get_ventas_summary(): nombre, unidades_vendidas, ingresos_totales
+      - Formato dashboard detalle:    nombre, cantidad, subtotal/precio_unitario
     """
 
     if not rows_filtrados:
@@ -18,12 +19,24 @@ def generar_excel_ventas(rows_filtrados):
         "total": 0
     })
 
-    # Agrupar por producto (subtotal = cantidad * precio_unitario por línea)
     for row in rows_filtrados:
-        producto = row["nombre"]
-        subtotal = row.get("subtotal") or (row["cantidad"] * row.get("precio_unitario", 0))
-        agrupado[producto]["unidades"] += row["cantidad"]
-        agrupado[producto]["total"] += subtotal
+        # Compatibilidad con sqlite3.Row (no soporta .get())
+        if not isinstance(row, dict):
+            row = dict(row)
+
+        producto = row.get("nombre", "Desconocido")
+
+        # Formato get_ventas_summary(): tiene unidades_vendidas e ingresos_totales
+        if "unidades_vendidas" in row:
+            unidades = row.get("unidades_vendidas") or 0
+            total = row.get("ingresos_totales") or 0
+        # Formato detalle de ventas: tiene cantidad y subtotal o precio_unitario
+        else:
+            unidades = row.get("cantidad") or 0
+            total = row.get("subtotal") or (unidades * row.get("precio_unitario", 0))
+
+        agrupado[producto]["unidades"] += unidades
+        agrupado[producto]["total"] += total
 
     filas = []
     total_general = 0

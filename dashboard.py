@@ -26,8 +26,8 @@ def mostrar_dashboard(page: ft.Page):
         cursor = conn.cursor()
 
         try:
-            cursor.execute("SELECT id FROM cortes_caja ORDER BY id DESC")
-            cortes = [str(r["id"]) for r in cursor.fetchall()]
+            cursor.execute("SELECT id, fecha_hora FROM cortes_caja ORDER BY id DESC")
+            cortes = [(str(r["id"]), r["fecha_hora"][:16].replace("T", " ")) for r in cursor.fetchall()]
         except Exception:
             cortes = []
 
@@ -77,6 +77,33 @@ def mostrar_dashboard(page: ft.Page):
             conn = get_connection()
             cursor = conn.cursor()
 
+            # ── Resolver rango de ventas según corte seleccionado ──────────────
+            desde_venta_id = 0      # id exclusivo desde donde empezar
+            hasta_venta_id = None   # None = sin límite superior
+
+            if filtro_corte != "Todos":
+                corte_id = int(filtro_corte)
+
+                # Límite superior: ultima_venta_id de este corte
+                cursor.execute(
+                    "SELECT ultima_venta_id FROM cortes_caja WHERE id = ?",
+                    (corte_id,)
+                )
+                row_actual = cursor.fetchone()
+                if not row_actual:
+                    conn.close()
+                    return []
+                hasta_venta_id = row_actual["ultima_venta_id"]
+
+                # Límite inferior: ultima_venta_id del corte anterior
+                cursor.execute(
+                    "SELECT ultima_venta_id FROM cortes_caja WHERE id < ? ORDER BY id DESC LIMIT 1",
+                    (corte_id,)
+                )
+                row_anterior = cursor.fetchone()
+                desde_venta_id = row_anterior["ultima_venta_id"] if row_anterior else 0
+
+            # ── Query base ─────────────────────────────────────────────────────
             query = """
             SELECT v.id, v.total, p.nombre, d.cantidad, d.precio_unitario,
                    (d.cantidad * d.precio_unitario) as subtotal,
@@ -90,6 +117,13 @@ def mostrar_dashboard(page: ft.Page):
             condiciones = []
             valores = []
 
+            # Filtro por rango de corte
+            condiciones.append("v.id > ?")
+            valores.append(desde_venta_id)
+            if hasta_venta_id is not None:
+                condiciones.append("v.id <= ?")
+                valores.append(hasta_venta_id)
+
             if filtro_producto != "Todos":
                 condiciones.append("p.nombre = ?")
                 valores.append(filtro_producto)
@@ -98,15 +132,9 @@ def mostrar_dashboard(page: ft.Page):
                 condiciones.append("m.nombre = ?")
                 valores.append(filtro_medio)
 
-            if filtro_corte != "Todos":
-                condiciones.append("v.corte_id = ?")
-                valores.append(int(filtro_corte))
-
-            if condiciones:
-                query += " WHERE " + " AND ".join(condiciones)
+            query += " WHERE " + " AND ".join(condiciones)
 
             cursor.execute(query, valores)
-            # Convertir a dict para que .get() funcione en los generadores de reportes
             rows = [dict(r) for r in cursor.fetchall()]
             conn.close()
             return rows
@@ -150,10 +178,10 @@ def mostrar_dashboard(page: ft.Page):
     # EVENTOS FILTROS
     # ============================
 
-    def cambiar_producto(e):
-        nonlocal filtro_producto
-        filtro_producto = e.control.value
-        recalcular()
+    # def cambiar_producto(e):
+    #     nonlocal filtro_producto
+    #     filtro_producto = e.control.value
+    #     recalcular()
 
     def cambiar_medio(e):
         nonlocal filtro_medio
@@ -187,7 +215,7 @@ def mostrar_dashboard(page: ft.Page):
         rows = obtener_datos_filtrados()
 
         texto = generar_ticket_ventas_totales(
-            "Bomberos Voluntarios de Humboldt",
+            "Sistema de Ventas - Resumen",
             rows
         )
 
@@ -231,16 +259,16 @@ def mostrar_dashboard(page: ft.Page):
 
     estilo_dropdown = ft.TextStyle(color=ft.colors.GREY_300)
 
-    producto_dropdown = ft.Dropdown(
-        label="Producto",
-        width=200,
-        value="Todos",
-        text_style=estilo_dropdown,
-        label_style=estilo_dropdown,
-        options=[ft.dropdown.Option("Todos")] +
-                [ft.dropdown.Option(p) for p in productos],
-        on_click=cambiar_producto
-    )
+    # producto_dropdown = ft.Dropdown(
+    #     label="Producto",
+    #     width=200,
+    #     value="Todos",
+    #     text_style=estilo_dropdown,
+    #     label_style=estilo_dropdown,
+    #     options=[ft.dropdown.Option("Todos")] +
+    #             [ft.dropdown.Option(p) for p in productos],
+    # )
+    # producto_dropdown.on_change = cambiar_producto
 
     medio_dropdown = ft.Dropdown(
         label="Medio de pago",
@@ -250,19 +278,19 @@ def mostrar_dashboard(page: ft.Page):
         label_style=estilo_dropdown,
         options=[ft.dropdown.Option("Todos")] +
                 [ft.dropdown.Option(m["nombre"]) for m in medios],
-        on_click=cambiar_medio
     )
+    medio_dropdown.on_change = cambiar_medio
 
     corte_dropdown = ft.Dropdown(
         label="Corte de caja",
-        width=200,
+        width=220,
         value="Todos",
         text_style=estilo_dropdown,
         label_style=estilo_dropdown,
-        options=[ft.dropdown.Option("Todos")] +
-                [ft.dropdown.Option(c) for c in cortes],
-        on_click=cambiar_corte
+        options=[ft.dropdown.Option("Todos", "Todos (general)")] +
+                [ft.dropdown.Option(c[0], f"#{c[0]} — {c[1]}") for c in cortes],
     )
+    corte_dropdown.on_change = cambiar_corte
 
     # ============================
     # TARJETAS UI
@@ -340,7 +368,7 @@ def mostrar_dashboard(page: ft.Page):
             ft.Row(
                 spacing=20,
                 controls=[
-                    producto_dropdown,
+                    # producto_dropdown,
                     medio_dropdown,
                     corte_dropdown
                 ]

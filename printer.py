@@ -13,7 +13,7 @@ def imprimir_ticket(texto):
         try:
             # 2. Configurar el documento en modo RAW (binario puro)
             # Esto evita que Windows intente usar drivers de texto y permite enviar el comando de CORTE
-            hJob = win32print.StartDocPrinter(hPrinter, 1, ("Ticket Bomberos", None, "RAW"))
+            hJob = win32print.StartDocPrinter(hPrinter, 1, ("Ticket ", None, "RAW"))
             win32print.StartPagePrinter(hPrinter)
             
             # 3. Preparar los datos

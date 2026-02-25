@@ -161,9 +161,15 @@ def crear_tablas_si_no_existen():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fecha_hora TEXT NOT NULL,
                 total_acumulado REAL NOT NULL,
-                ultima_venta_id INTEGER NOT NULL
+                ultima_venta_id INTEGER NOT NULL DEFAULT 0
             )
         """)
+
+        # Migración: agregar columna ultima_venta_id si la tabla ya existía sin ella
+        cursor.execute("PRAGMA table_info(cortes_caja)")
+        cols_corte = [col[1] for col in cursor.fetchall()]
+        if "ultima_venta_id" not in cols_corte:
+            cursor.execute("ALTER TABLE cortes_caja ADD COLUMN ultima_venta_id INTEGER NOT NULL DEFAULT 0")
 
         # ==================== VENTAS ====================
         cursor.execute("""
@@ -624,16 +630,24 @@ def insertar_detalle_venta(venta_id: int, producto_id: int, cantidad: int, preci
 
 # ==================== RESUMEN POR MEDIO DE PAGO ====================
 def resumen_por_medio_pago():
+    """
+    Devuelve el resumen de ventas por medio de pago
+    SOLO desde el último corte de caja (no acumulado histórico).
+    """
     conn = get_connection()
     cursor = conn.cursor()
+
+    ultimo_corte = obtener_ultimo_corte()
+    ultima_venta_id = ultimo_corte["ultima_venta_id"] if ultimo_corte else 0
 
     cursor.execute("""
         SELECT m.nombre, SUM(v.total) as total
         FROM ventas v
         JOIN medios_pago m ON v.medio_pago_id = m.id
+        WHERE v.id > ?
         GROUP BY m.nombre
         ORDER BY total DESC
-    """)
+    """, (ultima_venta_id,))
 
     rows = cursor.fetchall()
     conn.close()
@@ -706,6 +720,95 @@ def ventas_desde_ultimo_corte():
         """, (ultimo_corte["ultima_venta_id"],))
     else:
         cursor.execute("SELECT * FROM ventas")
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+def get_ventas_detalle_por_corte(corte_id=None):
+    """
+    Devuelve el detalle de ventas (producto, cantidad, precio_unitario, subtotal)
+    filtrado por corte de caja.
+    - Si corte_id es None → devuelve TODAS las ventas (sin filtro).
+    - Si corte_id es un id válido → devuelve solo las ventas de ese corte.
+
+    Cada fila tiene: nombre, cantidad, precio_unitario, subtotal, medio, fecha_hora
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if corte_id is None:
+        # Sin filtro: todas las ventas
+        cursor.execute("""
+            SELECT p.nombre,
+                   vd.cantidad,
+                   vd.precio_unitario,
+                   (vd.cantidad * vd.precio_unitario) AS subtotal,
+                   m.nombre AS medio,
+                   v.fecha_hora
+            FROM ventas_detalle vd
+            JOIN ventas v         ON vd.venta_id    = v.id
+            JOIN productos p      ON vd.producto_id = p.id
+            JOIN medios_pago m    ON v.medio_pago_id = m.id
+            ORDER BY v.fecha_hora DESC
+        """)
+    else:
+        # Solo ventas que pertenecen al corte indicado
+        # Un corte abarca las ventas entre el corte anterior y este
+        cursor.execute("""
+            SELECT ultima_venta_id FROM cortes_caja WHERE id = ?
+        """, (corte_id,))
+        corte_actual = cursor.fetchone()
+
+        if not corte_actual:
+            conn.close()
+            return []
+
+        hasta_id = corte_actual["ultima_venta_id"]
+
+        # Buscar el corte anterior para saber desde dónde empezar
+        cursor.execute("""
+            SELECT ultima_venta_id FROM cortes_caja
+            WHERE id < ?
+            ORDER BY id DESC
+            LIMIT 1
+        """, (corte_id,))
+        corte_anterior = cursor.fetchone()
+        desde_id = corte_anterior["ultima_venta_id"] if corte_anterior else 0
+
+        cursor.execute("""
+            SELECT p.nombre,
+                   vd.cantidad,
+                   vd.precio_unitario,
+                   (vd.cantidad * vd.precio_unitario) AS subtotal,
+                   m.nombre AS medio,
+                   v.fecha_hora
+            FROM ventas_detalle vd
+            JOIN ventas v         ON vd.venta_id    = v.id
+            JOIN productos p      ON vd.producto_id = p.id
+            JOIN medios_pago m    ON v.medio_pago_id = m.id
+            WHERE v.id > ? AND v.id <= ?
+            ORDER BY v.fecha_hora DESC
+        """, (desde_id, hasta_id))
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
+
+def get_todos_los_cortes():
+    """Devuelve lista de todos los cortes de caja para poblar el dropdown del dashboard."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, fecha_hora, total_acumulado
+        FROM cortes_caja
+        ORDER BY id DESC
+    """)
 
     rows = cursor.fetchall()
     conn.close()
