@@ -149,8 +149,10 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
             return
 
         # Generamos el texto del ticket
+        empresa = get_empresa()
+        nombre_empresa = (empresa.get("nombre") or "Resumen de ventas").strip() if empresa else "Resumen de ventas"
         texto_ticket = generar_ticket_ventas_totales(
-            "Resumen de ventas",
+            nombre_empresa,
             ventas_filtradas
         )
 
