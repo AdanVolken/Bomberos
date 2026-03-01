@@ -836,6 +836,9 @@ def reiniciar_sistema_ventas():
         # Borrar cortes
         cursor.execute("DELETE FROM cortes_caja")
 
+        # Borrar produtos
+        cursor.execute("DELETE FROM productos")
+
         # Resetear productos vendidos
         cursor.execute("""
             UPDATE productos
