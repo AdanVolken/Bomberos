@@ -814,3 +814,40 @@ def get_todos_los_cortes():
     conn.close()
 
     return [dict(row) for row in rows]
+
+# ==================== REINICIAR SISTEMA ====================
+
+def reiniciar_sistema_ventas():
+    """
+    Borra todas las ventas, detalles y cortes de caja.
+    Resetea cantidad_vendida a 0.
+    NO toca empresa, licencia ni medios de pago.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Borrar detalles primero (FK)
+        cursor.execute("DELETE FROM ventas_detalle")
+
+        # Borrar ventas
+        cursor.execute("DELETE FROM ventas")
+
+        # Borrar cortes
+        cursor.execute("DELETE FROM cortes_caja")
+
+        # Resetear productos vendidos
+        cursor.execute("""
+            UPDATE productos
+            SET cantidad_vendida = 0
+        """)
+
+        conn.commit()
+        return True, "Sistema reiniciado correctamente"
+
+    except Exception as e:
+        conn.rollback()
+        return False, str(e)
+
+    finally:
+        conn.close()

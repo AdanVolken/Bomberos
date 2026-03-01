@@ -94,6 +94,7 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         spacing=20,
         run_spacing=20,
     )
+    
 
     def refresh_products():
         products_grid.controls.clear()
@@ -183,6 +184,37 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
         page.snack_bar.open = True
         page.update()
 
+    def reiniciar_sistema():
+        def confirmar(e):
+            ok, msg = reiniciar_sistema_ventas()
+
+            page.dialog.open = False
+
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(msg),
+                bgcolor=ft.colors.GREEN if ok else ft.colors.RED
+            )
+            page.snack_bar.open = True
+
+            refresh_products()
+            page.update()
+
+        page.dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("Confirmar reinicio"),
+            content=ft.Text("¿Seguro que querés borrar TODAS las ventas y cortes?"),
+            actions=[
+                ft.TextButton("Cancelar", on_click=lambda e: cerrar_dialog()),
+                ft.ElevatedButton("Reiniciar", on_click=confirmar, bgcolor=ft.colors.RED)
+            ]
+        )
+
+        page.dialog.open = True
+        page.update()
+
+    def cerrar_dialog():
+        page.dialog.open = False
+        page.update()
 
     # ------------------ CART ------------------
 
@@ -532,6 +564,17 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 text_style=ft.TextStyle(size=13)
             ),
         ),
+        ft.ElevatedButton(
+            "Reiniciar sistema",
+            on_click=lambda e: reiniciar_sistema(),
+            bgcolor=ft.colors.RED_900,
+            color=ft.colors.WHITE,
+            height=36,
+            style=ft.ButtonStyle(
+                    padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                    text_style=ft.TextStyle(size=13)
+                ),
+        ),
     ]
     
     # Agregar botón de administración solo si es admin
@@ -541,7 +584,12 @@ def iniciar_app(page: ft.Page, usuario_actual: str):
                 "Administrar cuentas",
                 bgcolor=ft.colors.PURPLE_700,
                 color=ft.colors.WHITE,
-                on_click=lambda e: mostrar_admin_cuentas(page)
+                on_click=lambda e: mostrar_admin_cuentas(page),
+                height=36,
+                style=ft.ButtonStyle(                    
+                    padding=ft.padding.symmetric(horizontal=14, vertical=6),
+                    text_style=ft.TextStyle(size=13)
+                )
             )
         )
 
